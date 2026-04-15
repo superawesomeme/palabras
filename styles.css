@@ -2,9 +2,6 @@
   --bg-a: #2f58ff;
   --bg-b: #732bdf;
   --bg-c: #14b8b1;
-  --bg-red-a: #df3f61;
-  --bg-red-b: #c43858;
-  --bg-red-c: #a8304d;
   --glass: rgba(255, 255, 255, 0.16);
   --glass-border: rgba(255, 255, 255, 0.33);
   --text: #f7f8ff;
@@ -30,12 +27,6 @@ body {
   grid-template-rows: 1fr auto;
 }
 
-body.timeout {
-  background: linear-gradient(-45deg, var(--bg-red-a), var(--bg-red-b), var(--bg-red-c), #e8566e);
-  background-size: 300% 300%;
-  animation: bg-shift 14s ease infinite;
-}
-
 body.shake {
   animation: bg-shift 14s ease infinite, screen-shake 0.5s ease;
 }
@@ -49,26 +40,13 @@ body.shake {
 }
 
 .app-shell {
-  width: min(960px, 94vw);
-  margin: 1rem auto 0;
+  width: min(1200px, 95vw);
+  margin: 1rem auto;
   display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
   gap: 1rem;
-  align-content: start;
-}
-
-.glass {
-  background: var(--glass);
-  border: 1px solid var(--glass-border);
-  backdrop-filter: blur(12px);
-  border-radius: 18px;
-  box-shadow: 0 14px 35px rgba(10, 12, 39, 0.25);
-}
-
-.top-bar {
-  padding: 1rem 1.2rem;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  height: 100%;
+  min-height: 0;
 }
 
 h1,
@@ -83,36 +61,61 @@ p {
   border-radius: 50%;
 }
 
+.layout {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  min-height: calc(100dvh - 8rem);
+}
+
+.glass {
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(12px);
+  border-radius: 18px;
+  box-shadow: 0 14px 35px rgba(10, 12, 39, 0.25);
+}
+
 .clock-panel {
   padding: 1rem;
-  display: flex;
-  gap: 1rem;
-  align-items: center;
+  min-height: 100%;
+  display: grid;
 }
 
 .clock-left {
-  flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
-  align-items: center;
-}
-
-.clock-right {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 0.7rem;
   align-items: center;
   justify-content: center;
+  gap: 0.5rem;
 }
 
-.clock-right button {
-  width: 100%;
-  max-width: 180px;
+.right-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-height: 0;
+}
+
+.logo-placeholder {
+  min-height: 88px;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: clamp(1.2rem, 2vw, 1.7rem);
+  letter-spacing: 0.04em;
 }
 
 #clock-svg {
-  width: min(62vw, 260px);
+  width: 100%;
+  height: auto;
+  max-height: min(74vh, 100%);
+}
+
+#clock-svg.timeout-glow {
+  filter: drop-shadow(0 0 18px rgba(220, 40, 60, 0.95)) drop-shadow(0 0 40px rgba(220, 40, 60, 0.7))
+    drop-shadow(0 0 70px rgba(220, 40, 60, 0.45));
 }
 
 .clock-track,
@@ -130,14 +133,12 @@ p {
 .clock-elapsed {
   stroke: #fff;
   stroke-linecap: round;
-  transition: stroke-dashoffset 1s linear;
 }
 
 #clock-hand {
   stroke: #fff;
   stroke-width: 5;
   stroke-linecap: round;
-  transition: transform 1s linear;
   transform-origin: 120px 120px;
 }
 
@@ -182,13 +183,15 @@ p {
 }
 
 .control-row,
+.action-row,
 .submit-row {
   display: flex;
   gap: 0.7rem;
   flex-wrap: wrap;
 }
 
-.control-row {
+.control-row,
+.action-row {
   justify-content: center;
 }
 
@@ -357,9 +360,10 @@ footer {
   }
 }
 
-@media (max-width: 720px) {
-  .clock-panel {
-    flex-direction: column;
+@media (max-width: 700px) {
+  .layout {
+    grid-template-columns: 1fr;
+    min-height: 0;
   }
 
   .letter-board {

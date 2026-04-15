@@ -9,6 +9,8 @@ let clockDuration = 30;
 let timeLeft = clockDuration;
 let countdownId = null;
 let isRunning = false;
+let startTime = null;
+let lastSecond = null;
 
 const letterBoard = document.getElementById("letter-board");
 const consonantBtn = document.getElementById("consonant-btn");
@@ -21,6 +23,7 @@ const submitBtn = document.getElementById("submit-btn");
 const clockLabel = document.getElementById("clock-label");
 const clockHand = document.getElementById("clock-hand");
 const elapsedRing = document.getElementById("elapsed-ring");
+const clockSvg = document.getElementById("clock-svg");
 const dotsGroup = document.getElementById("clock-dots");
 const settingsToggle = document.getElementById("settings-toggle");
 const settingsPanel = document.getElementById("settings-panel");
@@ -139,6 +142,7 @@ function updateClockLabel(seconds) {
 
 function resetClockDisplay() {
   timeLeft = clockDuration;
+  lastSecond = timeLeft;
   updateClockLabel(timeLeft);
   updateClockHand(0);
   updateElapsedSector(0);
@@ -146,34 +150,45 @@ function resetClockDisplay() {
 
 function countdown() {
   if (!isRunning) return;
-  timeLeft -= 1;
-  const progress = Math.min(1, (clockDuration - timeLeft) / clockDuration);
-  updateClockLabel(Math.max(timeLeft, 0));
+  const progress = Math.min(1, (Date.now() - startTime) / (clockDuration * 1000));
+  const secondsLeft = Math.max(0, Math.ceil(clockDuration * (1 - progress)));
+  timeLeft = secondsLeft;
+
+  if (secondsLeft !== lastSecond) {
+    lastSecond = secondsLeft;
+    updateClockLabel(secondsLeft);
+    startBtn.textContent = `${secondsLeft}s`;
+  }
+
   updateClockHand(progress);
   updateElapsedSector(progress);
-  startBtn.textContent = `${Math.max(timeLeft, 0)}s`;
 
-  if (timeLeft <= 0) {
-    clearInterval(countdownId);
+  if (progress >= 1) {
+    cancelAnimationFrame(countdownId);
     countdownId = null;
     isRunning = false;
     startBtn.textContent = "¡Tiempo!";
-    document.body.classList.add("timeout");
+    clockSvg.classList.add("timeout-glow");
     wordInput.focus();
+    return;
   }
+
+  countdownId = requestAnimationFrame(countdown);
 }
 
 function startCountdown() {
   if (isRunning || selectedLetters.length !== maxLetters) return;
-  document.body.classList.remove("timeout");
+  clockSvg.classList.remove("timeout-glow");
   isRunning = true;
+  startTime = Date.now();
   timeLeft = clockDuration;
+  lastSecond = timeLeft;
   startBtn.textContent = `${timeLeft}s`;
   updateClockLabel(timeLeft);
   updateClockHand(0);
   updateElapsedSector(0);
-  clearInterval(countdownId);
-  countdownId = setInterval(countdown, 1000);
+  cancelAnimationFrame(countdownId);
+  countdownId = requestAnimationFrame(countdown);
 }
 
 function toggleSettings(open) {
@@ -189,11 +204,12 @@ resetBtn.addEventListener("click", () => {
   letterBoard.innerHTML = "";
   consonantBtn.disabled = false;
   vowelBtn.disabled = false;
-  clearInterval(countdownId);
+  cancelAnimationFrame(countdownId);
   countdownId = null;
   isRunning = false;
+  startTime = null;
   startBtn.textContent = "Inicio";
-  document.body.classList.remove("timeout");
+  clockSvg.classList.remove("timeout-glow");
   resetClockDisplay();
   wordInput.value = "";
   setSubmitState("Comprobar");
@@ -204,12 +220,12 @@ closeSettings.addEventListener("click", () => toggleSettings(false));
 durationInput.addEventListener("input", () => {
   clockDuration = Number(durationInput.value);
   durationOutput.textContent = `${clockDuration}s`;
-  if (countdownId) {
-    clearInterval(countdownId);
-    countdownId = null;
-  }
+  cancelAnimationFrame(countdownId);
+  countdownId = null;
   isRunning = false;
+  startTime = null;
   startBtn.textContent = "Inicio";
+  clockSvg.classList.remove("timeout-glow");
   resetClockDisplay();
 });
 
