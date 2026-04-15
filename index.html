@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Palabras Ocultas</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="background-glow" aria-hidden="true"></div>
+    <main class="app-shell">
+      <header class="top-bar glass">
+        <h1>Palabras Ocultas</h1>
+        <button id="settings-toggle" class="icon-btn" type="button" aria-label="Abrir ajustes">⚙</button>
+      </header>
+
+      <section class="clock-panel glass">
+        <svg id="clock-svg" viewBox="0 0 240 240" role="img" aria-label="Reloj de cuenta atrás">
+          <g id="clock-dots"></g>
+          <circle class="clock-track" cx="120" cy="120" r="88"></circle>
+          <circle id="elapsed-ring" class="clock-elapsed" cx="120" cy="120" r="88"></circle>
+          <line id="clock-hand" x1="120" y1="120" x2="120" y2="40"></line>
+          <circle class="clock-core" cx="120" cy="120" r="8"></circle>
+        </svg>
+        <p id="clock-label">30s</p>
+      </section>
+
+      <section class="board-panel glass">
+        <div id="letter-board" class="letter-board" aria-live="polite"></div>
+        <div class="control-row">
+          <button id="consonant-btn" type="button">Consonante</button>
+          <button id="vowel-btn" type="button">Vocal</button>
+          <button id="start-btn" type="button" class="start-btn">Inicio</button>
+        </div>
+      </section>
+
+      <section class="word-panel glass">
+        <form id="word-form">
+          <label for="word-input">Tu palabra</label>
+          <div class="submit-row">
+            <input id="word-input" name="word" type="text" autocomplete="off" maxlength="20" />
+            <button id="submit-btn" type="submit">Comprobar</button>
+          </div>
+        </form>
+      </section>
+
+      <details class="instructions glass">
+        <summary>Instrucciones</summary>
+        <ol>
+          <li>Pulsa <strong>Consonante</strong> o <strong>Vocal</strong> hasta completar 9 letras.</li>
+          <li>Pulsa <strong>Inicio</strong> para activar la cuenta atrás.</li>
+          <li>Escribe una palabra en español con esas letras y pulsa <strong>Comprobar</strong>.</li>
+        </ol>
+      </details>
+    </main>
+
+    <aside id="settings-panel" class="settings-panel glass" aria-hidden="true">
+      <h2>Ajustes</h2>
+      <label for="duration-input">Duración del reloj (10–120s)</label>
+      <input id="duration-input" type="range" min="10" max="120" value="30" />
+      <output id="duration-output" for="duration-input">30s</output>
+      <button id="close-settings" type="button">Cerrar</button>
+    </aside>
+
+    <footer>
+      Created by Shaun Daubney. Copyright Newbury College.
+    </footer>
+    <script src="./game.js"></script>
+  </body>
+</html>
