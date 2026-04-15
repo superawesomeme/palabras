@@ -14,6 +14,7 @@ const letterBoard = document.getElementById("letter-board");
 const consonantBtn = document.getElementById("consonant-btn");
 const vowelBtn = document.getElementById("vowel-btn");
 const startBtn = document.getElementById("start-btn");
+const resetBtn = document.getElementById("reset-btn");
 const wordForm = document.getElementById("word-form");
 const wordInput = document.getElementById("word-input");
 const submitBtn = document.getElementById("submit-btn");
@@ -45,6 +46,11 @@ function addLetter(letter) {
   const tile = document.createElement("div");
   tile.className = "tile pop-in";
   tile.textContent = letter;
+  tile.style.cursor = "pointer";
+  tile.addEventListener("click", () => {
+    wordInput.value += letter.toLowerCase();
+    setSubmitState("Comprobar");
+  });
   letterBoard.appendChild(tile);
   setTimeout(() => tile.classList.remove("pop-in"), 430);
   if (selectedLetters.length >= maxLetters) {
@@ -178,6 +184,20 @@ function toggleSettings(open) {
 consonantBtn.addEventListener("click", () => addLetter(weightedRandomLetter(consonants, consonantFrequencies)));
 vowelBtn.addEventListener("click", () => addLetter(weightedRandomLetter(vowels, vowelFrequencies)));
 startBtn.addEventListener("click", startCountdown);
+resetBtn.addEventListener("click", () => {
+  selectedLetters = [];
+  letterBoard.innerHTML = "";
+  consonantBtn.disabled = false;
+  vowelBtn.disabled = false;
+  clearInterval(countdownId);
+  countdownId = null;
+  isRunning = false;
+  startBtn.textContent = "Inicio";
+  document.body.classList.remove("timeout");
+  resetClockDisplay();
+  wordInput.value = "";
+  setSubmitState("Comprobar");
+});
 settingsToggle.addEventListener("click", () => toggleSettings(true));
 closeSettings.addEventListener("click", () => toggleSettings(false));
 
