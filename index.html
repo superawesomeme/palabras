@@ -15,14 +15,20 @@
       </header>
 
       <section class="clock-panel glass">
-        <svg id="clock-svg" viewBox="0 0 240 240" role="img" aria-label="Reloj de cuenta atrás">
-          <g id="clock-dots"></g>
-          <circle class="clock-track" cx="120" cy="120" r="88"></circle>
-          <circle id="elapsed-ring" class="clock-elapsed" cx="120" cy="120" r="88"></circle>
-          <line id="clock-hand" x1="120" y1="120" x2="120" y2="40"></line>
-          <circle class="clock-core" cx="120" cy="120" r="8"></circle>
-        </svg>
-        <p id="clock-label">30s</p>
+        <div class="clock-left">
+          <svg id="clock-svg" viewBox="0 0 240 240" role="img" aria-label="Reloj de cuenta atrás">
+            <g id="clock-dots"></g>
+            <circle class="clock-track" cx="120" cy="120" r="88"></circle>
+            <circle id="elapsed-ring" class="clock-elapsed" cx="120" cy="120" r="88"></circle>
+            <line id="clock-hand" x1="120" y1="120" x2="120" y2="40"></line>
+            <circle class="clock-core" cx="120" cy="120" r="8"></circle>
+          </svg>
+          <p id="clock-label">30s</p>
+        </div>
+        <div class="clock-right">
+          <button id="start-btn" type="button" class="start-btn">Inicio</button>
+          <button id="reset-btn" type="button">Reset</button>
+        </div>
       </section>
 
       <section class="board-panel glass">
@@ -30,7 +36,6 @@
         <div class="control-row">
           <button id="consonant-btn" type="button">Consonante</button>
           <button id="vowel-btn" type="button">Vocal</button>
-          <button id="start-btn" type="button" class="start-btn">Inicio</button>
         </div>
       </section>
 

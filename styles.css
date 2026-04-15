@@ -2,9 +2,9 @@
   --bg-a: #2f58ff;
   --bg-b: #732bdf;
   --bg-c: #14b8b1;
-  --bg-red-a: #ff2a2a;
-  --bg-red-b: #c0392b;
-  --bg-red-c: #8b0000;
+  --bg-red-a: #df3f61;
+  --bg-red-b: #c43858;
+  --bg-red-c: #a8304d;
   --glass: rgba(255, 255, 255, 0.16);
   --glass-border: rgba(255, 255, 255, 0.33);
   --text: #f7f8ff;
@@ -31,7 +31,7 @@ body {
 }
 
 body.timeout {
-  background: linear-gradient(-45deg, var(--bg-red-a), var(--bg-red-b), var(--bg-red-c), #ff6b6b);
+  background: linear-gradient(-45deg, var(--bg-red-a), var(--bg-red-b), var(--bg-red-c), #e8566e);
   background-size: 300% 300%;
   animation: bg-shift 14s ease infinite;
 }
@@ -85,7 +85,30 @@ p {
 
 .clock-panel {
   padding: 1rem;
-  text-align: center;
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.clock-left {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.clock-right {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  align-items: center;
+  justify-content: center;
+}
+
+.clock-right button {
+  width: 100%;
+  max-width: 180px;
 }
 
 #clock-svg {
@@ -107,14 +130,14 @@ p {
 .clock-elapsed {
   stroke: #fff;
   stroke-linecap: round;
-  transition: stroke-dashoffset 0.25s linear;
+  transition: stroke-dashoffset 1s linear;
 }
 
 #clock-hand {
   stroke: #fff;
   stroke-width: 5;
   stroke-linecap: round;
-  transition: transform 0.2s linear;
+  transition: transform 1s linear;
   transform-origin: 120px 120px;
 }
 
@@ -145,6 +168,13 @@ p {
   background: rgba(255, 255, 255, 0.9);
   color: var(--deep-blue);
   box-shadow: 0 10px 16px rgba(26, 38, 66, 0.24);
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.tile:hover {
+  transform: translateY(-2px) scale(1.06);
+  box-shadow: 0 14px 22px rgba(26, 38, 66, 0.35);
 }
 
 .tile.pop-in {
@@ -156,6 +186,10 @@ p {
   display: flex;
   gap: 0.7rem;
   flex-wrap: wrap;
+}
+
+.control-row {
+  justify-content: center;
 }
 
 button,
@@ -324,6 +358,10 @@ footer {
 }
 
 @media (max-width: 720px) {
+  .clock-panel {
+    flex-direction: column;
+  }
+
   .letter-board {
     grid-template-columns: repeat(3, 1fr);
   }
