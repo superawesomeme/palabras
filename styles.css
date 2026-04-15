@@ -215,6 +215,21 @@ button:hover {
   box-shadow: 0 6px 16px rgba(20, 24, 66, 0.35);
 }
 
+.glass-btn {
+  background: rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(10, 12, 39, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+}
+
+.glass-btn:hover {
+  background: rgba(255, 255, 255, 0.28);
+  box-shadow: 0 6px 20px rgba(10, 12, 39, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
 button:disabled {
   opacity: 0.65;
   cursor: not-allowed;
@@ -227,6 +242,20 @@ button:disabled {
 #word-form {
   display: grid;
   gap: 0.5rem;
+}
+
+.guess-list {
+  list-style: none;
+  margin: 0;
+  padding: 0.4rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.guess-list li {
+  font-size: 0.88rem;
+  opacity: 0.9;
 }
 
 input[type="text"] {
@@ -252,15 +281,6 @@ input[type="text"] {
 #submit-btn.bad {
   background: var(--bad-letters);
   animation: shake 0.35s ease;
-}
-
-.instructions {
-  padding: 0.8rem 1rem;
-}
-
-.instructions summary {
-  cursor: pointer;
-  font-weight: 600;
 }
 
 .settings-panel {
