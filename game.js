@@ -11,6 +11,7 @@ let countdownId = null;
 let isRunning = false;
 let startTime = null;
 let lastSecond = null;
+let guesses = [];
 
 const letterBoard = document.getElementById("letter-board");
 const consonantBtn = document.getElementById("consonant-btn");
@@ -19,6 +20,7 @@ const startBtn = document.getElementById("start-btn");
 const resetBtn = document.getElementById("reset-btn");
 const wordForm = document.getElementById("word-form");
 const wordInput = document.getElementById("word-input");
+const guessList = document.getElementById("guess-list");
 const submitBtn = document.getElementById("submit-btn");
 const clockLabel = document.getElementById("clock-label");
 const clockHand = document.getElementById("clock-hand");
@@ -106,6 +108,20 @@ function triggerShake() {
   void document.body.offsetWidth;
   document.body.classList.add("shake");
   setTimeout(() => document.body.classList.remove("shake"), 500);
+}
+
+function addGuessToList(word, correct) {
+  const score = correct ? word.length : 0;
+  const guess = {
+    word: word.toUpperCase(),
+    correct,
+    score
+  };
+  guesses.push(guess);
+
+  const item = document.createElement("li");
+  item.textContent = `${guess.correct ? "✅" : "❌"} ${guess.word} — ${guess.score} pts`;
+  guessList.appendChild(item);
 }
 
 function createCircleDots() {
@@ -201,7 +217,9 @@ vowelBtn.addEventListener("click", () => addLetter(weightedRandomLetter(vowels, 
 startBtn.addEventListener("click", startCountdown);
 resetBtn.addEventListener("click", () => {
   selectedLetters = [];
+  guesses = [];
   letterBoard.innerHTML = "";
+  guessList.innerHTML = "";
   consonantBtn.disabled = false;
   vowelBtn.disabled = false;
   cancelAnimationFrame(countdownId);
@@ -249,6 +267,8 @@ wordForm.addEventListener("submit", async (event) => {
     setSubmitState("¡Palabra inválida!", "incorrect");
     triggerShake();
   }
+
+  addGuessToList(word, validWord);
 });
 
 createCircleDots();
