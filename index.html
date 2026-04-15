@@ -1,68 +1,22 @@
-<!doctype html>
-<html lang="es">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Palabras Ocultas</title>
-    <link rel="stylesheet" href="./styles.css" />
-  </head>
-  <body>
-    <div class="background-glow" aria-hidden="true"></div>
-    <main class="app-shell">
-      <div class="layout">
-        <section class="clock-panel glass">
-          <div class="clock-left">
-            <svg id="clock-svg" viewBox="0 0 240 240" role="img" aria-label="Reloj de cuenta atrás">
-              <g id="clock-dots"></g>
-              <circle class="clock-track" cx="120" cy="120" r="88"></circle>
-              <circle id="elapsed-ring" class="clock-elapsed" cx="120" cy="120" r="88"></circle>
-              <line id="clock-hand" x1="120" y1="120" x2="120" y2="40"></line>
-              <circle class="clock-core" cx="120" cy="120" r="8"></circle>
-            </svg>
-            <p id="clock-label">30s</p>
-          </div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles.css">
+    <title>Palabras</title>
+</head>
+<body>
+    <header>
+        <h1>Welcome to Palabras</h1>
+    </header>
+    <main>
+        <section>
+            <h2>About the Game</h2>
+            <p>Palabras Ocultas is a fun game!</p>
+            <!-- Updated line 27 -->
+            <img src="./images/palabras-logo.png" alt="Palabras Ocultas" class="logo-placeholder" />
         </section>
-
-        <section class="right-panel">
-          <div class="logo-placeholder glass">Palabras Ocultas</div>
-          <section class="board-panel glass">
-            <div id="letter-board" class="letter-board" aria-live="polite"></div>
-            <div class="control-row">
-              <button id="consonant-btn" type="button">Consonante</button>
-              <button id="vowel-btn" type="button">Vocal</button>
-            </div>
-            <div class="action-row">
-              <button id="start-btn" type="button" class="start-btn glass-btn">Inicio</button>
-              <button id="reset-btn" type="button" class="glass-btn">Reset</button>
-              <button id="settings-toggle" class="icon-btn glass-btn" type="button" aria-label="Abrir ajustes">⚙</button>
-            </div>
-          </section>
-
-          <section class="word-panel glass">
-            <form id="word-form">
-              <label for="word-input">Tu palabra</label>
-              <div class="submit-row">
-                <input id="word-input" name="word" type="text" autocomplete="off" maxlength="20" />
-                <button id="submit-btn" type="submit">Comprobar</button>
-              </div>
-            </form>
-            <ul id="guess-list" class="guess-list"></ul>
-          </section>
-        </section>
-      </div>
     </main>
-
-    <aside id="settings-panel" class="settings-panel glass" aria-hidden="true">
-      <h2>Ajustes</h2>
-      <label for="duration-input">Duración del reloj (10–120s)</label>
-      <input id="duration-input" type="range" min="10" max="120" value="30" />
-      <output id="duration-output" for="duration-input">30s</output>
-      <button id="close-settings" type="button">Cerrar</button>
-    </aside>
-
-    <footer>
-      Created by Shaun Daubney.
-    </footer>
-    <script src="./game.js"></script>
-  </body>
+</body>
 </html>
