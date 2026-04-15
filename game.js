@@ -187,7 +187,7 @@ function startCountdown() {
   updateClockLabel(timeLeft);
   updateClockHand(0);
   updateElapsedSector(0);
-  cancelAnimationFrame(countdownId);
+  if (countdownId) cancelAnimationFrame(countdownId);
   countdownId = requestAnimationFrame(countdown);
 }
 
@@ -204,7 +204,7 @@ resetBtn.addEventListener("click", () => {
   letterBoard.innerHTML = "";
   consonantBtn.disabled = false;
   vowelBtn.disabled = false;
-  cancelAnimationFrame(countdownId);
+  if (countdownId) cancelAnimationFrame(countdownId);
   countdownId = null;
   isRunning = false;
   startTime = null;
@@ -220,7 +220,7 @@ closeSettings.addEventListener("click", () => toggleSettings(false));
 durationInput.addEventListener("input", () => {
   clockDuration = Number(durationInput.value);
   durationOutput.textContent = `${clockDuration}s`;
-  cancelAnimationFrame(countdownId);
+  if (countdownId) cancelAnimationFrame(countdownId);
   countdownId = null;
   isRunning = false;
   startTime = null;
