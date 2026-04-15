@@ -99,12 +99,10 @@ p {
 }
 
 .logo-placeholder {
+  height: auto;
   max-height: 160px;
   width: auto;
   display: block;
-  font-weight: 700;
-  font-size: clamp(1.2rem, 2vw, 1.7rem);
-  letter-spacing: 0.04em;
 }
 
 #clock-svg {
@@ -159,7 +157,7 @@ p {
   gap: 1rem;
 }
 
-.tile {
+tile {
   aspect-ratio: 1 / 1;
   display: grid;
   place-items: center;
