@@ -46,7 +46,6 @@ function addLetter(letter) {
   const tile = document.createElement("div");
   tile.className = "tile pop-in";
   tile.textContent = letter;
-  tile.style.cursor = "pointer";
   tile.addEventListener("click", () => {
     wordInput.value += letter.toLowerCase();
     setSubmitState("Comprobar");
