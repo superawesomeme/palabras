@@ -92,6 +92,13 @@ function setSubmitState(text, className = "") {
   if (className) submitBtn.classList.add(className);
 }
 
+function triggerShake() {
+  document.body.classList.remove("shake");
+  void document.body.offsetWidth;
+  document.body.classList.add("shake");
+  setTimeout(() => document.body.classList.remove("shake"), 500);
+}
+
 function createCircleDots() {
   dotsGroup.innerHTML = "";
   const radius = 102;
@@ -145,12 +152,14 @@ function countdown() {
     countdownId = null;
     isRunning = false;
     startBtn.textContent = "¡Tiempo!";
+    document.body.classList.add("timeout");
     wordInput.focus();
   }
 }
 
 function startCountdown() {
   if (isRunning || selectedLetters.length !== maxLetters) return;
+  document.body.classList.remove("timeout");
   isRunning = true;
   timeLeft = clockDuration;
   startBtn.textContent = `${timeLeft}s`;
@@ -193,6 +202,7 @@ wordForm.addEventListener("submit", async (event) => {
 
   if (!usesOnlyAvailableLetters(word, selectedLetters)) {
     setSubmitState("¡Letras inválidas!", "bad");
+    triggerShake();
     return;
   }
 
@@ -201,6 +211,7 @@ wordForm.addEventListener("submit", async (event) => {
     setSubmitState("¡Palabra válida!", "correct");
   } else {
     setSubmitState("¡Palabra inválida!", "incorrect");
+    triggerShake();
   }
 });
 

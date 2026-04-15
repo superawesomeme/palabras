@@ -2,6 +2,9 @@
   --bg-a: #2f58ff;
   --bg-b: #732bdf;
   --bg-c: #14b8b1;
+  --bg-red-a: #ff2a2a;
+  --bg-red-b: #c0392b;
+  --bg-red-c: #8b0000;
   --glass: rgba(255, 255, 255, 0.16);
   --glass-border: rgba(255, 255, 255, 0.33);
   --text: #f7f8ff;
@@ -25,6 +28,16 @@ body {
   animation: bg-shift 14s ease infinite;
   display: grid;
   grid-template-rows: 1fr auto;
+}
+
+body.timeout {
+  background: linear-gradient(-45deg, var(--bg-red-a), var(--bg-red-b), var(--bg-red-c), #ff6b6b);
+  background-size: 300% 300%;
+  animation: bg-shift 14s ease infinite;
+}
+
+body.shake {
+  animation: bg-shift 14s ease infinite, screen-shake 0.5s ease;
 }
 
 .background-glow {
@@ -127,6 +140,7 @@ p {
   display: grid;
   place-items: center;
   font-weight: 700;
+  font-size: 3em;
   border-radius: 14px;
   background: rgba(255, 255, 255, 0.9);
   color: var(--deep-blue);
@@ -281,6 +295,31 @@ footer {
   }
   100% {
     background-position: 0% 50%;
+  }
+}
+
+@keyframes screen-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  15% {
+    transform: translateX(-8px);
+  }
+  30% {
+    transform: translateX(8px);
+  }
+  45% {
+    transform: translateX(-6px);
+  }
+  60% {
+    transform: translateX(6px);
+  }
+  75% {
+    transform: translateX(-4px);
+  }
+  90% {
+    transform: translateX(4px);
   }
 }
 
