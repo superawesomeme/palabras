@@ -99,9 +99,9 @@ p {
 }
 
 .logo-placeholder {
-  min-height: 88px;
-  display: grid;
-  place-items: center;
+  max-height: 160px;
+  width: auto;
+  display: block;
   font-weight: 700;
   font-size: clamp(1.2rem, 2vw, 1.7rem);
   letter-spacing: 0.04em;
@@ -173,12 +173,12 @@ p {
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
-.tile:hover {
+tile:hover {
   transform: translateY(-2px) scale(1.06);
   box-shadow: 0 14px 22px rgba(26, 38, 66, 0.35);
 }
 
-.tile.pop-in {
+tile.pop-in {
   animation: pop 0.42s cubic-bezier(0.2, 0.9, 0.2, 1.15);
 }
 
