@@ -4,13 +4,30 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Palabras Ocultas</title>
-    <link rel="stylesheet" href="./styles.css" />
+    <link rel="stylesheet" href="./styles.css?v=5" />
   </head>
   <body>
     <div class="background-glow" aria-hidden="true"></div>
+
     <main class="app-shell">
-      <div class="layout">
-        <section class="clock-panel glass">
+      <header class="game-header">
+        <img src="./images/palabras-logo.png" alt="Palabras Ocultas" class="logo-placeholder" />
+      </header>
+
+      <section class="board-panel glass" aria-label="Selección de letras">
+             <div id="letter-board" class="letter-board" aria-live="polite"></div>
+
+        <div class="board-controls">
+          <div class="control-row" aria-label="Elegir letras">
+            <button id="consonant-btn" type="button">Consonante</button>
+            <button id="vowel-btn" type="button">Vocal</button>
+          </div>
+        </div>
+      </section>
+
+      <div class="lower-layout">
+        <section class="clock-panel glass" aria-label="Reloj de cuenta atrás">
+
           <div class="clock-left">
             <svg id="clock-svg" viewBox="0 0 240 240" role="img" aria-label="Reloj de cuenta atrás">
               <g id="clock-dots"></g>
@@ -21,33 +38,34 @@
             </svg>
             <p id="clock-label">30s</p>
           </div>
+
+          <div class="action-row">
+            <button id="start-btn" type="button" class="start-btn">Inicio</button>
+            <button id="reset-btn" type="button" class="glass-btn">Reset</button>
+            <button id="settings-toggle" class="icon-btn glass-btn" type="button" aria-label="Abrir ajustes">⚙</button>
+          </div>
         </section>
 
-        <section class="right-panel">
-          <img src="./images/palabras-logo.png" alt="Palabras Ocultas" class="logo-placeholder" />
-          <section class="board-panel glass">
-            <div id="letter-board" class="letter-board" aria-live="polite"></div>
-            <div class="control-row">
-              <button id="consonant-btn" type="button">Consonante</button>
-              <button id="vowel-btn" type="button">Vocal</button>
+        <section class="word-panel glass" aria-label="Comprobador de palabras">
+          <form id="word-form">
+            <label for="word-input">Escribe una palabra usando las letras de arriba</label>
+            <div class="submit-row">
+              <input
+                id="word-input"
+                name="word"
+                type="text"
+                autocomplete="off"
+                maxlength="20"
+                placeholder="Escribe aquí…"
+              />
+              <button id="submit-btn" type="submit">Comprobar</button>
             </div>
-            <div class="action-row">
-              <button id="start-btn" type="button" class="start-btn glass-btn">Inicio</button>
-              <button id="reset-btn" type="button" class="glass-btn">Reset</button>
-              <button id="settings-toggle" class="icon-btn glass-btn" type="button" aria-label="Abrir ajustes">⚙</button>
-            </div>
-          </section>
+          </form>
 
-          <section class="word-panel glass">
-            <form id="word-form">
-              <label for="word-input">Tu palabra</label>
-              <div class="submit-row">
-                <input id="word-input" name="word" type="text" autocomplete="off" maxlength="20" />
-                <button id="submit-btn" type="submit">Comprobar</button>
-              </div>
-            </form>
+          <div class="guess-history">
+            <p class="history-title">Intentos</p>
             <ul id="guess-list" class="guess-list"></ul>
-          </section>
+          </div>
         </section>
       </div>
     </main>
@@ -60,9 +78,7 @@
       <button id="close-settings" type="button">Cerrar</button>
     </aside>
 
-    <footer>
-      Created by Shaun Daubney.
-    </footer>
-    <script src="./game.js"></script>
+    <footer>Created by Shaun Daubney.</footer>
+    <script src="./game.js?v=5"></script>
   </body>
 </html>
