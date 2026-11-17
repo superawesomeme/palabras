@@ -1,28 +1,36 @@
 # Palabras Ocultas
 
-A Spanish nine-letter word game designed for a 16:9 classroom whiteboard. It uses plain HTML, CSS and JavaScript and needs no build step.
+A Spanish nine-letter word game for a classroom interactive whiteboard. It runs directly in modern browsers and requires no framework or build step.
 
-## Playing
+## How to play
 
-1. Select nine letters with **Consonante** and **Vocal**. Each tile is touch/clickable, so learners can build answers on a whiteboard.
-2. Press **Empezar** to start the configurable countdown. The same button pauses, resumes and repeats the timer.
-3. Enter a word or tap its letters, then press the tick or Enter. Correct words score their length. Each word scores only once.
-4. Use the circular-arrow button for a new round; use the cog to change the duration.
+- Tap **Consonante** and **Vocal** until the nine letter slots are full. Vowels are gold; consonants are white. The two selection buttons disappear as soon as the board is full.
+- Press **Empezar** to begin the countdown. The same button pauses, resumes and replays the clock. Use the cog in the top-right corner to set a duration between 10 and 120 seconds.
+- Type a word or tap its letters, then press the large tick or Enter. Valid answers score one point for every letter. A word can score only once per round.
+- The star and score show total points; accepted words appear as small chips below the answer field. Use the circular arrow for a new round and the fullscreen icon to fill the projector/whiteboard.
 
-**Spanish spelling:** letter tiles are accent-neutral. A tile `A` can supply `a` or `á`; `E`/`É`, `I`/`Í`, `O`/`Ó`, `U`/`Ú`/`Ü`, and `N`/`Ñ` work the same way. For example, entering `dia` can be accepted as `día`, with the dictionary spelling shown on-screen. The same physical tile cannot be used twice unless the board contains it twice.
+**Spanish spelling:** tile letters are accent-neutral. `A` also allows `á`, `N` also allows `ñ`, and so on. For example, `dia` can be accepted as `día`: the correct dictionary spelling appears on screen and scores normally. Letter multiplicity is still enforced; a tile cannot be reused unless it appears multiple times.
+
+## Classroom display and UX
+
+The layout is designed around a **16:9 landscape screen**, tested at **1920×1080**, **1600×900** and **1280×720** with no scrolling. Its simplified three-part composition deliberately avoids decorative cards, instructional headings and unused UI: large nine-letter board in the centre, two bold letter selection buttons that disappear after selection, and a clean lower play dock for countdown, answers and points. The deep navy/blue/cyan gradient is contrasted with vivid white, gold, mint and lime game pieces.
+
+Small screens and portrait devices use a stacked 3×3 board with the timer, score and answer controls below. Focus indicators, labels for icon-only buttons, a native settings dialog, touch targets and reduced-motion preference are supported.
 
 ## Dictionary and limitations
 
-Validation currently uses the [Datamuse Spanish vocabulary](https://www.datamuse.com/api/) (`v=es`). This is an **online** lookup; an unavailable connection is reported separately and does **not** mark an answer wrong. The lookup first seeks exact words, then Spanish suggestions, then accent/ñ wildcard matches. It can accept common inflected forms; it cannot guarantee every valid Spanish word is included. Teachers should treat contested answers as a dictionary coverage limitation rather than a definitive ruling.
+Validation uses the external [Datamuse Spanish vocabulary](https://www.datamuse.com/api/) (`v=es`) via `dictionary.js`. The app seeks exact words, then suggestions, then accent/ñ wildcard matches. If the service is unavailable, the app reports an outage **without** marking an answer incorrect. Some genuine forms may still be missing from the vocabulary; check disputed answers with a teacher.
 
-**Service change:** Datamuse's published documentation says it will require API keys from **1 February 2027**. Before that date, plan either a configured API-key proxy (do not expose a private key in client JavaScript) or a locally hosted Spanish lexicon to preserve validation. The game remains usable as a letter-and-timer game without lookups, but checking words will show an availability warning.
+**Service change:** Datamuse's published API documentation says it will require API keys from **1 February 2027**. Plan a configured API-key proxy or locally hosted Spanish lexicon before then. Do **not** embed private API keys in browser JavaScript.
 
-## Run and test
+## Testing
 
-Open `index.html` in a current browser or serve the directory from a static web host. No dependencies or build system are needed. Run the dictionary unit tests using Node.js 18 or later:
+Node.js 18 or later:
 
 ```sh
+node --check game.js
+node --check dictionary.js
 node --test tests/dictionary.test.js
 ```
 
-The design is tuned for a 1920×1080 or 1280×720 landscape display and also rearranges on portrait/narrow screens. The settings dialog, keyboard navigation, prominent focus indicators and reduced-motion preference are supported.
+Interactive Chromium checks have covered selecting letters, timer start/pause/resume, settings, reset, accent-corrected scoring, duplicate prevention and letter-pool constraints. Visual screenshots have been reviewed at the screen resolutions above and a 390px portrait viewport.

@@ -3,104 +3,105 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#24215c">
+  <meta name="theme-color" content="#071e49">
   <title>Palabras Ocultas · Juego de letras</title>
-  <link rel="stylesheet" href="./styles.css?v=6">
+  <link rel="stylesheet" href="./styles.css?v=7">
 </head>
 <body>
-  <main class="game-layout">
+  <main id="game-layout" class="game-layout" data-phase="choosing">
     <header class="topbar">
-      <div class="brand">
-        <span class="brand-mark" aria-hidden="true">P</span>
-        <div>
-          <h1>Palabras <span>Ocultas</span></h1>
-          <p>El juego de las nueve letras</p>
-        </div>
+      <div class="brand" aria-label="Palabras Ocultas">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 64 64"><path d="m32 7 5.6 17.4L55 30l-17.4 5.6L32 53l-5.6-17.4L9 30l17.4-5.6L32 7Z"/></svg>
+        </span>
+        <span class="brand-title">PALABRAS<span> OCULTAS</span></span>
       </div>
-      <div class="toolbar">
-        <span class="round-pill"><span class="status-dot" aria-hidden="true"></span><span id="round-state">Preparar ronda</span></span>
-        <button id="reset-btn" class="tool-button" type="button" title="Nueva ronda" aria-label="Nueva ronda">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11a9 9 0 1 1 2.4 6.1M3 4v7h7"/></svg>
+      <div class="toolbar" role="group" aria-label="Opciones del juego">
+        <button id="reset-btn" class="tool-button" type="button" aria-label="Nueva ronda" title="Nueva ronda">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 11a8.5 8.5 0 1 1 2.4 6M3.5 4.5V11H10"/></svg>
         </button>
-        <button id="settings-toggle" class="tool-button" type="button" title="Ajustes" aria-label="Abrir ajustes">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"/><path d="M19.4 15.1 21 16.4l-2 3.4-2-.7a8.9 8.9 0 0 1-2.2 1.2L14.5 22h-5l-.3-1.7A9 9 0 0 1 7 19.1l-2 .7-2-3.4 1.6-1.3a9 9 0 0 1 0-2.6L3 11.2l2-3.4 2 .7a9 9 0 0 1 2.2-1.2L9.5 5h5l.3 2.3A9 9 0 0 1 17 8.5l2-.7 2 3.4-1.6 1.3a9 9 0 0 1 0 2.6Z" transform="translate(0 -1) scale(1 .92)"/></svg>
+        <button id="fullscreen-btn" class="tool-button" type="button" aria-label="Pantalla completa" title="Pantalla completa">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></svg>
+        </button>
+        <button id="settings-toggle" class="tool-button" type="button" aria-label="Ajustes" title="Ajustes">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"/><path d="m19 13.9 2 1.2-2 3.5-2.1-.6a8.8 8.8 0 0 1-2 1.2l-.4 2.2h-4l-.4-2.2a8.8 8.8 0 0 1-2-1.2l-2.1.6-2-3.5 2-1.2a9 9 0 0 1 0-2.4l-2-1.2 2-3.5 2.1.6a8.8 8.8 0 0 1 2-1.2l.4-2.2h4l.4 2.2a8.8 8.8 0 0 1 2 1.2l2.1-.6 2 3.5-2 1.2a9 9 0 0 1 0 2.4Z"/></svg>
         </button>
       </div>
     </header>
 
-    <section class="letters-card card" aria-labelledby="letters-heading">
-      <div class="section-head">
-        <h2 id="letters-heading">Tus letras</h2>
-        <span id="letter-progress" class="small-pill" aria-live="polite">0 / 9</span>
+    <section class="play-stage" aria-label="Letras del juego">
+      <div class="stage-aura" aria-hidden="true"></div>
+      <div id="letter-board" class="letter-board" role="group" aria-label="Nueve letras disponibles"></div>
+      <div class="letter-controls" aria-label="Elegir letras">
+        <button id="consonant-btn" class="choice-button choice-consonant" type="button">
+          <span class="choice-icon" aria-hidden="true">C</span><span>Consonante</span>
+        </button>
+        <button id="vowel-btn" class="choice-button choice-vowel" type="button">
+          <span class="choice-icon" aria-hidden="true">V</span><span>Vocal</span>
+        </button>
       </div>
-      <div id="letter-board" class="letter-board" role="group" aria-label="Letras disponibles"></div>
-      <div class="letter-footer">
-        <p id="phase-help" class="phase-help" aria-live="polite">Elige nueve letras para empezar.</p>
-        <div class="letter-actions">
-          <button id="consonant-btn" class="choice-button choice-consonant" type="button"><span class="choice-letter" aria-hidden="true">C</span> Consonante</button>
-          <button id="vowel-btn" class="choice-button choice-vowel" type="button"><span class="choice-letter" aria-hidden="true">V</span> Vocal</button>
-        </div>
-      </div>
+      <span id="letter-progress" class="sr-only" aria-live="polite">0 / 9</span>
+      <span id="round-state" class="sr-only" aria-live="polite">Preparar ronda</span>
+      <span id="phase-help" class="sr-only" aria-live="polite">Elige nueve letras para empezar.</span>
     </section>
 
-    <div class="lower-layout">
-      <section class="timer-card card" aria-labelledby="timer-heading">
-        <div class="section-head">
-          <h2 id="timer-heading">Cuenta atrás</h2>
-          <span id="duration-badge" class="small-pill">30 s</span>
+    <section class="play-dock" aria-label="Reloj, respuestas y puntuación">
+      <div class="timer-zone">
+        <div id="timer-orbit" class="timer-orbit" aria-label="Tiempo restante">
+          <svg viewBox="0 0 240 240" aria-hidden="true">
+            <circle class="timer-track" cx="120" cy="120" r="104" />
+            <circle id="elapsed-ring" class="timer-progress" cx="120" cy="120" r="104" />
+          </svg>
+          <span id="clock-label" class="clock-label" aria-live="off">30</span>
+          <span class="clock-unit">SEG</span>
         </div>
-        <div class="timer-content">
-          <div id="timer-orbit" class="timer-orbit">
-            <svg viewBox="0 0 240 240" aria-hidden="true">
-              <circle class="timer-track" cx="120" cy="120" r="104" />
-              <circle id="elapsed-ring" class="timer-progress" cx="120" cy="120" r="104" />
-            </svg>
-            <span id="clock-label" class="clock-label" aria-live="off">30</span>
-            <span class="clock-unit">segundos</span>
-          </div>
-          <div class="timer-actions">
-            <button id="start-btn" class="primary-button" type="button" disabled>
-              <svg id="start-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 11 7-11 7V5Z"/></svg>
-              <span id="start-label">Empezar</span>
-            </button>
-            <p id="timer-hint" class="timer-hint">Completa las nueve letras.</p>
-          </div>
-        </div>
-      </section>
+        <button id="start-btn" class="play-button" type="button" disabled>
+          <svg id="start-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 11 7-11 7V5Z"/></svg>
+          <span id="start-label">Empezar</span>
+        </button>
+        <span id="duration-badge" class="sr-only">30 s</span>
+        <span id="timer-hint" class="sr-only">Completa las nueve letras.</span>
+      </div>
 
-      <section class="answers-card card" aria-labelledby="answer-heading">
-        <div class="section-head">
-          <h2 id="answer-heading">Tu palabra</h2>
-          <span id="score-value" class="small-pill score-pill">0 puntos</span>
-        </div>
+      <div class="answer-zone">
         <form id="word-form" novalidate>
           <label class="sr-only" for="word-input">Escribe una palabra con las letras disponibles</label>
           <div class="word-entry">
-            <input id="word-input" type="text" name="word" maxlength="9" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Escribe o pulsa las letras" disabled>
+            <input id="word-input" type="text" name="word" maxlength="9" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Tu palabra…" disabled>
             <button id="submit-btn" class="check-button" type="submit" disabled aria-label="Comprobar palabra" title="Comprobar palabra">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4.5 12 5.5 5.5 10-11"/></svg>
             </button>
           </div>
         </form>
-        <p id="feedback" class="feedback" role="status" aria-live="polite">Las tildes y la ñ se reconocen automáticamente.</p>
-        <div class="history-heading"><span>Palabras encontradas</span><span id="found-count">0</span></div>
-        <ul id="guess-list" class="guess-list" aria-label="Palabras correctas encontradas"><li class="empty-history">Aquí aparecerán las palabras correctas.</li></ul>
-      </section>
-    </div>
+        <p id="feedback" class="feedback" role="status" aria-live="polite"></p>
+        <ul id="guess-list" class="guess-list" aria-label="Palabras correctas encontradas"></ul>
+      </div>
 
-    <footer><span>Creado por Shaun Daubney</span><span>Diccionario: Datamuse</span></footer>
+      <div class="score-zone" aria-label="Puntuación">
+        <div class="score-medal" aria-hidden="true">
+          <svg viewBox="0 0 64 64"><path d="m32 7 7.5 15.2 16.8 2.4-12.1 11.8 2.9 16.7L32 45.2l-15.1 7.9 2.9-16.7L7.7 24.6l16.8-2.4L32 7Z"/></svg>
+        </div>
+        <div id="score-value" class="score-value" aria-live="polite">0</div>
+        <span class="score-label">PUNTOS</span>
+        <span id="found-count" class="found-count" aria-label="Palabras encontradas">0 palabras</span>
+        <div id="score-sparkles" class="score-sparkles" aria-hidden="true"></div>
+      </div>
+    </section>
   </main>
 
   <dialog id="settings-panel" class="settings-panel" aria-labelledby="settings-heading">
     <div class="settings-heading">
       <h2 id="settings-heading">Ajustes</h2>
-      <button id="close-settings" class="tool-button close-button" type="button" aria-label="Cerrar ajustes">×</button>
+      <button id="close-settings" class="tool-button close-button" type="button" aria-label="Cerrar ajustes">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5 19 19M19 5 5 19"/></svg>
+      </button>
     </div>
-    <label for="duration-input">Duración de la cuenta atrás</label>
+    <label for="duration-input">Duración del reloj</label>
     <div class="slider-row"><input id="duration-input" type="range" min="10" max="120" step="5" value="30"><output id="duration-output" for="duration-input">30 s</output></div>
-    <p>Al cambiar la duración, se reinicia el reloj, pero se conservan las letras.</p>
+    <p>Al cambiar la duración, el reloj se reinicia, pero se conservan las letras.</p>
+    <p class="settings-credit">Creado por Shaun Daubney · Diccionario: Datamuse</p>
   </dialog>
   <script src="./dictionary.js?v=6"></script>
-  <script src="./game.js?v=6"></script>
+  <script src="./game.js?v=7"></script>
 </body>
 </html>
