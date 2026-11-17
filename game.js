@@ -9,6 +9,7 @@ const maxLetters = 9;
 const circumference = 2 * Math.PI * 104;
 
 const byId = (id) => document.getElementById(id);
+const layout = byId("game-layout");
 const board = byId("letter-board");
 const progressLabel = byId("letter-progress");
 const phaseHelp = byId("phase-help");
@@ -30,6 +31,8 @@ const feedback = byId("feedback");
 const guessList = byId("guess-list");
 const foundCount = byId("found-count");
 const scoreValue = byId("score-value");
+const scoreZone = document.querySelector(".score-zone");
+const scoreSparkles = byId("score-sparkles");
 const settingsPanel = byId("settings-panel");
 const durationInput = byId("duration-input");
 const durationOutput = byId("duration-output");
@@ -68,12 +71,13 @@ function renderBoard() {
       tile.type = "button";
       tile.className = "tile";
       tile.textContent = selectedLetters[i];
+      tile.dataset.kind = "AEIOU".includes(selectedLetters[i]) ? "vowel" : "consonant";
       tile.title = `Añadir ${selectedLetters[i]} a la palabra`;
       tile.setAttribute("aria-label", `Añadir letra ${selectedLetters[i]}`);
       tile.addEventListener("click", () => {
         if (wordInput.disabled || wordInput.value.length >= maxLetters) return;
         wordInput.value += tile.textContent.toLocaleLowerCase("es");
-        setFeedback("Pulsa comprobar o la tecla Intro.");
+        setFeedback("");
         wordInput.focus();
       });
       board.append(tile);
@@ -90,6 +94,7 @@ function renderBoard() {
   wordInput.disabled = !complete;
   submitBtn.disabled = !complete || validationPending;
   progressLabel.textContent = `${selectedLetters.length} / ${maxLetters}`;
+  layout.dataset.phase = complete ? "playing" : "choosing";
   phaseHelp.textContent = complete ? "¡Listo! Forma palabras con estas letras." : "Elige nueve letras para empezar.";
   updateRoundStatus();
   updateTimerControls();
@@ -99,7 +104,7 @@ function addLetter(letter) {
   if (selectedLetters.length >= maxLetters) return;
   selectedLetters.push(letter);
   renderBoard();
-  if (selectedLetters.length === maxLetters) setFeedback("¡Letras listas! Puedes comenzar el reloj.");
+  if (selectedLetters.length === maxLetters) setFeedback("");
 }
 
 function updateRoundStatus() {
@@ -166,13 +171,11 @@ function toggleTimer() {
 }
 
 function updateScore() {
-  scoreValue.textContent = `${points} ${points === 1 ? "punto" : "puntos"}`;
-  foundCount.textContent = String(acceptedWords.size);
+  foundCount.textContent = `${acceptedWords.size} ${acceptedWords.size === 1 ? "palabra" : "palabras"}`;
+  scoreValue.textContent = String(points);
 }
 
 function addAcceptedWord(word, original) {
-  const empty = guessList.querySelector(".empty-history");
-  if (empty) empty.remove();
   const item = document.createElement("li");
   item.className = "guess-item";
   const name = document.createElement("strong");
@@ -189,6 +192,23 @@ function addAcceptedWord(word, original) {
   guessList.prepend(item);
 }
 
+
+function celebrateScore() {
+  scoreZone.classList.remove("score-bump");
+  void scoreZone.offsetWidth;
+  scoreZone.classList.add("score-bump");
+  scoreSparkles.replaceChildren();
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  for (let i = 0; i < 9; i += 1) {
+    const sparkle = document.createElement("span");
+    const angle = (i / 9) * Math.PI * 2;
+    sparkle.style.setProperty("--dx", `${Math.cos(angle) * (50 + (i % 3) * 18)}px`);
+    sparkle.style.setProperty("--dy", `${Math.sin(angle) * (50 + (i % 3) * 18)}px`);
+    scoreSparkles.append(sparkle);
+  }
+  setTimeout(() => scoreSparkles.replaceChildren(), 850);
+}
+
 function resetRound() {
   roundId += 1; // Ignore dictionary responses from the previous round.
   validationPending = false;
@@ -200,14 +220,12 @@ function resetRound() {
   remainingMs = clockDuration * 1000;
   wordInput.value = "";
   guessList.replaceChildren();
-  const placeholder = document.createElement("li");
-  placeholder.className = "empty-history";
-  placeholder.textContent = "Aquí aparecerán las palabras correctas.";
-  guessList.append(placeholder);
+  scoreSparkles.replaceChildren();
+  scoreZone.classList.remove("score-bump");
   renderBoard();
   renderClock();
   updateScore();
-  setFeedback("Las tildes y la ñ se reconocen automáticamente.");
+  setFeedback("");
 }
 
 wordForm.addEventListener("submit", async (event) => {
@@ -249,19 +267,34 @@ wordForm.addEventListener("submit", async (event) => {
   points += Array.from(correct).length;
   addAcceptedWord(correct, original);
   updateScore();
+  celebrateScore();
   setFeedback(correct === original ? `¡Correcto! ${correct.toLocaleUpperCase("es")}` : `¡Correcto! La forma escrita es ${correct.toLocaleUpperCase("es")}.`, "success");
   if (wordInput.value.trim().toLocaleLowerCase("es") === original) wordInput.value = "";
   wordInput.focus();
 });
 
 wordInput.addEventListener("input", () => {
-  if (!validationPending) setFeedback("Pulsa comprobar o la tecla Intro.");
+  if (!validationPending) setFeedback("");
 });
 consonantBtn.addEventListener("click", () => addLetter(weightedRandomLetter(consonants, consonantFrequencies)));
 vowelBtn.addEventListener("click", () => addLetter(weightedRandomLetter(vowels, vowelFrequencies)));
 startBtn.addEventListener("click", toggleTimer);
 byId("reset-btn").addEventListener("click", resetRound);
 byId("settings-toggle").addEventListener("click", () => settingsPanel.showModal());
+const fullscreenBtn = byId("fullscreen-btn");
+fullscreenBtn.addEventListener("click", async () => {
+  try {
+    if (document.fullscreenElement) await document.exitFullscreen();
+    else await document.documentElement.requestFullscreen();
+  } catch (_) {
+    setFeedback("Pantalla completa no disponible en este navegador.", "warning");
+  }
+});
+document.addEventListener("fullscreenchange", () => {
+  const fullscreen = Boolean(document.fullscreenElement);
+  fullscreenBtn.setAttribute("aria-label", fullscreen ? "Salir de pantalla completa" : "Pantalla completa");
+  fullscreenBtn.title = fullscreen ? "Salir de pantalla completa" : "Pantalla completa";
+});
 byId("close-settings").addEventListener("click", () => settingsPanel.close());
 settingsPanel.addEventListener("click", (event) => { if (event.target === settingsPanel) settingsPanel.close(); });
 durationInput.addEventListener("input", () => {
