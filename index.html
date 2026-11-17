@@ -1,84 +1,106 @@
 <!doctype html>
 <html lang="es">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Palabras Ocultas</title>
-    <link rel="stylesheet" href="./styles.css?v=5" />
-  </head>
-  <body>
-    <div class="background-glow" aria-hidden="true"></div>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#24215c">
+  <title>Palabras Ocultas · Juego de letras</title>
+  <link rel="stylesheet" href="./styles.css?v=6">
+</head>
+<body>
+  <main class="game-layout">
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">P</span>
+        <div>
+          <h1>Palabras <span>Ocultas</span></h1>
+          <p>El juego de las nueve letras</p>
+        </div>
+      </div>
+      <div class="toolbar">
+        <span class="round-pill"><span class="status-dot" aria-hidden="true"></span><span id="round-state">Preparar ronda</span></span>
+        <button id="reset-btn" class="tool-button" type="button" title="Nueva ronda" aria-label="Nueva ronda">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11a9 9 0 1 1 2.4 6.1M3 4v7h7"/></svg>
+        </button>
+        <button id="settings-toggle" class="tool-button" type="button" title="Ajustes" aria-label="Abrir ajustes">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"/><path d="M19.4 15.1 21 16.4l-2 3.4-2-.7a8.9 8.9 0 0 1-2.2 1.2L14.5 22h-5l-.3-1.7A9 9 0 0 1 7 19.1l-2 .7-2-3.4 1.6-1.3a9 9 0 0 1 0-2.6L3 11.2l2-3.4 2 .7a9 9 0 0 1 2.2-1.2L9.5 5h5l.3 2.3A9 9 0 0 1 17 8.5l2-.7 2 3.4-1.6 1.3a9 9 0 0 1 0 2.6Z" transform="translate(0 -1) scale(1 .92)"/></svg>
+        </button>
+      </div>
+    </header>
 
-    <main class="app-shell">
-      <header class="game-header">
-        <img src="./images/palabras-logo.png" alt="Palabras Ocultas" class="logo-placeholder" />
-      </header>
+    <section class="letters-card card" aria-labelledby="letters-heading">
+      <div class="section-head">
+        <h2 id="letters-heading">Tus letras</h2>
+        <span id="letter-progress" class="small-pill" aria-live="polite">0 / 9</span>
+      </div>
+      <div id="letter-board" class="letter-board" role="group" aria-label="Letras disponibles"></div>
+      <div class="letter-footer">
+        <p id="phase-help" class="phase-help" aria-live="polite">Elige nueve letras para empezar.</p>
+        <div class="letter-actions">
+          <button id="consonant-btn" class="choice-button choice-consonant" type="button"><span class="choice-letter" aria-hidden="true">C</span> Consonante</button>
+          <button id="vowel-btn" class="choice-button choice-vowel" type="button"><span class="choice-letter" aria-hidden="true">V</span> Vocal</button>
+        </div>
+      </div>
+    </section>
 
-      <section class="board-panel glass" aria-label="Selección de letras">
-             <div id="letter-board" class="letter-board" aria-live="polite"></div>
-
-        <div class="board-controls">
-          <div class="control-row" aria-label="Elegir letras">
-            <button id="consonant-btn" type="button">Consonante</button>
-            <button id="vowel-btn" type="button">Vocal</button>
+    <div class="lower-layout">
+      <section class="timer-card card" aria-labelledby="timer-heading">
+        <div class="section-head">
+          <h2 id="timer-heading">Cuenta atrás</h2>
+          <span id="duration-badge" class="small-pill">30 s</span>
+        </div>
+        <div class="timer-content">
+          <div id="timer-orbit" class="timer-orbit">
+            <svg viewBox="0 0 240 240" aria-hidden="true">
+              <circle class="timer-track" cx="120" cy="120" r="104" />
+              <circle id="elapsed-ring" class="timer-progress" cx="120" cy="120" r="104" />
+            </svg>
+            <span id="clock-label" class="clock-label" aria-live="off">30</span>
+            <span class="clock-unit">segundos</span>
+          </div>
+          <div class="timer-actions">
+            <button id="start-btn" class="primary-button" type="button" disabled>
+              <svg id="start-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 11 7-11 7V5Z"/></svg>
+              <span id="start-label">Empezar</span>
+            </button>
+            <p id="timer-hint" class="timer-hint">Completa las nueve letras.</p>
           </div>
         </div>
       </section>
 
-      <div class="lower-layout">
-        <section class="clock-panel glass" aria-label="Reloj de cuenta atrás">
-
-          <div class="clock-left">
-            <svg id="clock-svg" viewBox="0 0 240 240" role="img" aria-label="Reloj de cuenta atrás">
-              <g id="clock-dots"></g>
-              <circle class="clock-track" cx="120" cy="120" r="88"></circle>
-              <circle id="elapsed-ring" class="clock-elapsed" cx="120" cy="120" r="88"></circle>
-              <line id="clock-hand" x1="120" y1="120" x2="120" y2="40"></line>
-              <circle class="clock-core" cx="120" cy="120" r="8"></circle>
-            </svg>
-            <p id="clock-label">30s</p>
+      <section class="answers-card card" aria-labelledby="answer-heading">
+        <div class="section-head">
+          <h2 id="answer-heading">Tu palabra</h2>
+          <span id="score-value" class="small-pill score-pill">0 puntos</span>
+        </div>
+        <form id="word-form" novalidate>
+          <label class="sr-only" for="word-input">Escribe una palabra con las letras disponibles</label>
+          <div class="word-entry">
+            <input id="word-input" type="text" name="word" maxlength="9" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Escribe o pulsa las letras" disabled>
+            <button id="submit-btn" class="check-button" type="submit" disabled aria-label="Comprobar palabra" title="Comprobar palabra">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg>
+            </button>
           </div>
+        </form>
+        <p id="feedback" class="feedback" role="status" aria-live="polite">Las tildes y la ñ se reconocen automáticamente.</p>
+        <div class="history-heading"><span>Palabras encontradas</span><span id="found-count">0</span></div>
+        <ul id="guess-list" class="guess-list" aria-label="Palabras correctas encontradas"><li class="empty-history">Aquí aparecerán las palabras correctas.</li></ul>
+      </section>
+    </div>
 
-          <div class="action-row">
-            <button id="start-btn" type="button" class="start-btn">Inicio</button>
-            <button id="reset-btn" type="button" class="glass-btn">Reset</button>
-            <button id="settings-toggle" class="icon-btn glass-btn" type="button" aria-label="Abrir ajustes">⚙</button>
-          </div>
-        </section>
+    <footer><span>Creado por Shaun Daubney</span><span>Diccionario: Datamuse</span></footer>
+  </main>
 
-        <section class="word-panel glass" aria-label="Comprobador de palabras">
-          <form id="word-form">
-            <label for="word-input">Escribe una palabra usando las letras de arriba</label>
-            <div class="submit-row">
-              <input
-                id="word-input"
-                name="word"
-                type="text"
-                autocomplete="off"
-                maxlength="20"
-                placeholder="Escribe aquí…"
-              />
-              <button id="submit-btn" type="submit">Comprobar</button>
-            </div>
-          </form>
-
-          <div class="guess-history">
-            <p class="history-title">Intentos</p>
-            <ul id="guess-list" class="guess-list"></ul>
-          </div>
-        </section>
-      </div>
-    </main>
-
-    <aside id="settings-panel" class="settings-panel glass" aria-hidden="true">
-      <h2>Ajustes</h2>
-      <label for="duration-input">Duración del reloj (10–120s)</label>
-      <input id="duration-input" type="range" min="10" max="120" value="30" />
-      <output id="duration-output" for="duration-input">30s</output>
-      <button id="close-settings" type="button">Cerrar</button>
-    </aside>
-
-    <footer>Created by Shaun Daubney.</footer>
-    <script src="./game.js?v=5"></script>
-  </body>
+  <dialog id="settings-panel" class="settings-panel" aria-labelledby="settings-heading">
+    <div class="settings-heading">
+      <h2 id="settings-heading">Ajustes</h2>
+      <button id="close-settings" class="tool-button close-button" type="button" aria-label="Cerrar ajustes">×</button>
+    </div>
+    <label for="duration-input">Duración de la cuenta atrás</label>
+    <div class="slider-row"><input id="duration-input" type="range" min="10" max="120" step="5" value="30"><output id="duration-output" for="duration-input">30 s</output></div>
+    <p>Al cambiar la duración, se reinicia el reloj, pero se conservan las letras.</p>
+  </dialog>
+  <script src="./dictionary.js?v=6"></script>
+  <script src="./game.js?v=6"></script>
+</body>
 </html>

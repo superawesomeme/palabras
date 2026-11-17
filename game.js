@@ -1,275 +1,277 @@
+"use strict";
+
+const { foldSpanish, canMakeWord, lookupSpanishWord } = globalThis.PalabrasDictionary;
 const consonants = "BCDFGHJKLMNPQRSTVWXYZ";
 const consonantFrequencies = [2, 1, 4, 3, 1, 1, 1, 1, 4, 1, 5, 2, 1, 6, 6, 3, 3, 1, 1, 1, 1];
 const vowels = "AEIOU";
 const vowelFrequencies = [12, 12, 10, 9, 5];
-
 const maxLetters = 9;
-let selectedLetters = [];
-let clockDuration = 30;
-let timeLeft = clockDuration;
-let countdownId = null;
-let isRunning = false;
-let startTime = null;
-let lastSecond = null;
-let guesses = [];
+const circumference = 2 * Math.PI * 104;
 
-const letterBoard = document.getElementById("letter-board");
-const consonantBtn = document.getElementById("consonant-btn");
-const vowelBtn = document.getElementById("vowel-btn");
-const startBtn = document.getElementById("start-btn");
-const resetBtn = document.getElementById("reset-btn");
-const wordForm = document.getElementById("word-form");
-const wordInput = document.getElementById("word-input");
-const guessList = document.getElementById("guess-list");
-const submitBtn = document.getElementById("submit-btn");
-const clockLabel = document.getElementById("clock-label");
-const clockHand = document.getElementById("clock-hand");
-const elapsedRing = document.getElementById("elapsed-ring");
-const clockSvg = document.getElementById("clock-svg");
-const dotsGroup = document.getElementById("clock-dots");
-const settingsToggle = document.getElementById("settings-toggle");
-const settingsPanel = document.getElementById("settings-panel");
-const closeSettings = document.getElementById("close-settings");
-const durationInput = document.getElementById("duration-input");
-const durationOutput = document.getElementById("duration-output");
+const byId = (id) => document.getElementById(id);
+const board = byId("letter-board");
+const progressLabel = byId("letter-progress");
+const phaseHelp = byId("phase-help");
+const roundState = byId("round-state");
+const consonantBtn = byId("consonant-btn");
+const vowelBtn = byId("vowel-btn");
+const startBtn = byId("start-btn");
+const startLabel = byId("start-label");
+const startIconPath = byId("start-icon").querySelector("path");
+const clockLabel = byId("clock-label");
+const timerOrbit = byId("timer-orbit");
+const clockRing = byId("elapsed-ring");
+const timerHint = byId("timer-hint");
+const durationBadge = byId("duration-badge");
+const wordForm = byId("word-form");
+const wordInput = byId("word-input");
+const submitBtn = byId("submit-btn");
+const feedback = byId("feedback");
+const guessList = byId("guess-list");
+const foundCount = byId("found-count");
+const scoreValue = byId("score-value");
+const settingsPanel = byId("settings-panel");
+const durationInput = byId("duration-input");
+const durationOutput = byId("duration-output");
+
+let selectedLetters = [];
+let acceptedWords = new Set();
+let points = 0;
+let clockDuration = 30;
+let remainingMs = clockDuration * 1000;
+let deadline = 0;
+let timerFrame = null;
+let timerState = "ready"; // ready, running, paused, finished
+let validationPending = false;
+let roundId = 0;
 
 function weightedRandomLetter(letters, frequencies) {
   const total = frequencies.reduce((sum, value) => sum + value, 0);
   let roll = Math.random() * total;
   for (let i = 0; i < letters.length; i += 1) {
     roll -= frequencies[i];
-    if (roll < 0) {
-      return letters[i];
-    }
+    if (roll < 0) return letters[i];
   }
   return letters[letters.length - 1];
+}
+
+function setFeedback(message, tone = "neutral") {
+  feedback.textContent = message;
+  feedback.dataset.tone = tone;
+}
+
+function renderBoard() {
+  board.replaceChildren();
+  for (let i = 0; i < maxLetters; i += 1) {
+    if (i < selectedLetters.length) {
+      const tile = document.createElement("button");
+      tile.type = "button";
+      tile.className = "tile";
+      tile.textContent = selectedLetters[i];
+      tile.title = `Añadir ${selectedLetters[i]} a la palabra`;
+      tile.setAttribute("aria-label", `Añadir letra ${selectedLetters[i]}`);
+      tile.addEventListener("click", () => {
+        if (wordInput.disabled || wordInput.value.length >= maxLetters) return;
+        wordInput.value += tile.textContent.toLocaleLowerCase("es");
+        setFeedback("Pulsa comprobar o la tecla Intro.");
+        wordInput.focus();
+      });
+      board.append(tile);
+    } else {
+      const empty = document.createElement("div");
+      empty.className = "tile-slot";
+      empty.setAttribute("aria-hidden", "true");
+      board.append(empty);
+    }
+  }
+  const complete = selectedLetters.length === maxLetters;
+  consonantBtn.disabled = complete;
+  vowelBtn.disabled = complete;
+  wordInput.disabled = !complete;
+  submitBtn.disabled = !complete || validationPending;
+  progressLabel.textContent = `${selectedLetters.length} / ${maxLetters}`;
+  phaseHelp.textContent = complete ? "¡Listo! Forma palabras con estas letras." : "Elige nueve letras para empezar.";
+  updateRoundStatus();
+  updateTimerControls();
 }
 
 function addLetter(letter) {
   if (selectedLetters.length >= maxLetters) return;
   selectedLetters.push(letter);
-  const tile = document.createElement("div");
-  tile.className = "tile pop-in";
-  tile.textContent = letter;
-  tile.style.cursor = "pointer";
-  tile.addEventListener("click", () => {
-    wordInput.value += letter.toLowerCase();
-    setSubmitState("Comprobar");
-  });
-  letterBoard.appendChild(tile);
-  setTimeout(() => tile.classList.remove("pop-in"), 430);
-  if (selectedLetters.length >= maxLetters) {
-    consonantBtn.disabled = true;
-    vowelBtn.disabled = true;
-  }
+  renderBoard();
+  if (selectedLetters.length === maxLetters) setFeedback("¡Letras listas! Puedes comenzar el reloj.");
 }
 
-function normalizeAccents(str) {
-  return str
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[ñÑ]/g, (match) => (match === "ñ" ? "n" : "N"))
-    .replace(/[üÜ]/g, (match) => (match === "ü" ? "u" : "U"));
+function updateRoundStatus() {
+  if (selectedLetters.length < maxLetters) roundState.textContent = "Preparar ronda";
+  else if (timerState === "running") roundState.textContent = "En marcha";
+  else if (timerState === "paused") roundState.textContent = "En pausa";
+  else if (timerState === "finished") roundState.textContent = "¡Tiempo!";
+  else roundState.textContent = "Listo para jugar";
 }
 
-function usesOnlyAvailableLetters(word, availableLetters) {
-  const normalizedWord = normalizeAccents(word.toUpperCase()).split("");
-  const normalizedPool = availableLetters.map((letter) => normalizeAccents(letter.toUpperCase()));
-  const pool = [...normalizedPool];
-
-  for (const letter of normalizedWord) {
-    const idx = pool.indexOf(letter);
-    if (idx === -1) return false;
-    pool.splice(idx, 1);
-  }
-  return true;
+function renderClock() {
+  const seconds = Math.max(0, Math.ceil(remainingMs / 1000));
+  clockLabel.textContent = String(seconds);
+  const fraction = Math.max(0, Math.min(1, remainingMs / (clockDuration * 1000)));
+  clockRing.style.strokeDasharray = String(circumference);
+  clockRing.style.strokeDashoffset = String(circumference * (1 - fraction));
+  timerOrbit.classList.toggle("urgent", seconds <= 5 && timerState !== "ready");
+  durationBadge.textContent = `${clockDuration} s`;
 }
 
-async function isValidSpanishWord(word) {
-  try {
-    const url = `https://api.datamuse.com/words?sp=${encodeURIComponent(word)}&v=es&md=d&max=1`;
-    const response = await fetch(url);
-    if (!response.ok) return false;
-    const data = await response.json();
-    return data.length > 0 && data[0].word?.toLowerCase() === word.toLowerCase();
-  } catch (error) {
-    return false;
-  }
+function updateTimerControls() {
+  startBtn.disabled = selectedLetters.length !== maxLetters;
+  const label = timerState === "running" ? "Pausar" : timerState === "paused" ? "Continuar" : timerState === "finished" ? "Repetir" : "Empezar";
+  startLabel.textContent = label;
+  startIconPath.setAttribute("d", timerState === "running" ? "M9 5v14M15 5v14" : timerState === "finished" ? "M4 11a8 8 0 1 1 2 5.4M4 5v6h6" : "m9 5 11 7-11 7V5Z");
+  timerHint.textContent = selectedLetters.length < maxLetters ? "Completa las nueve letras." : timerState === "running" ? "¡Encuentra la palabra más larga!" : timerState === "paused" ? "Reloj en pausa." : timerState === "finished" ? "Se acabó el tiempo." : "Pulsa Empezar cuando quieras.";
+  updateRoundStatus();
 }
 
-function setSubmitState(text, className = "") {
-  submitBtn.textContent = text;
-  submitBtn.classList.remove("correct", "incorrect", "bad");
-  if (className) submitBtn.classList.add(className);
+function stopTimer() {
+  if (timerFrame !== null) cancelAnimationFrame(timerFrame);
+  timerFrame = null;
 }
 
-function triggerShake() {
-  document.body.classList.remove("shake");
-  void document.body.offsetWidth;
-  document.body.classList.add("shake");
-  setTimeout(() => document.body.classList.remove("shake"), 500);
-}
-
-function addGuessToList(word, correct) {
-  const score = correct ? word.length : 0;
-  const guess = {
-    word: word.toUpperCase(),
-    correct,
-    score
-  };
-  guesses.push(guess);
-
-  const item = document.createElement("li");
-  item.textContent = `${guess.correct ? "✅" : "❌"} ${guess.word} — ${guess.score} pts`;
-  guessList.appendChild(item);
-}
-
-function createCircleDots() {
-  dotsGroup.innerHTML = "";
-  const radius = 102;
-  for (let i = 0; i < 60; i += 1) {
-    const angle = (i / 60) * Math.PI * 2;
-    const x = 120 + Math.cos(angle) * radius;
-    const y = 120 + Math.sin(angle) * radius;
-    const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-    dot.setAttribute("cx", x.toFixed(2));
-    dot.setAttribute("cy", y.toFixed(2));
-    dot.setAttribute("r", i % 5 === 0 ? "2.7" : "1.45");
-    dot.setAttribute("fill", "rgba(255,255,255,0.78)");
-    dotsGroup.appendChild(dot);
-  }
-}
-
-function updateClockHand(progress) {
-  const angle = progress * 360;
-  clockHand.style.transform = `rotate(${angle}deg)`;
-}
-
-function updateElapsedSector(progress) {
-  const radius = 88;
-  const circumference = 2 * Math.PI * radius;
-  elapsedRing.style.strokeDasharray = `${circumference}`;
-  elapsedRing.style.strokeDashoffset = `${circumference * (1 - progress)}`;
-}
-
-function updateClockLabel(seconds) {
-  clockLabel.textContent = `${seconds}s`;
-}
-
-function resetClockDisplay() {
-  timeLeft = clockDuration;
-  lastSecond = timeLeft;
-  updateClockLabel(timeLeft);
-  updateClockHand(0);
-  updateElapsedSector(0);
-}
-
-function countdown() {
-  if (!isRunning) return;
-  const progress = Math.min(1, (Date.now() - startTime) / (clockDuration * 1000));
-  const secondsLeft = Math.max(0, Math.ceil(clockDuration * (1 - progress)));
-  timeLeft = secondsLeft;
-
-  if (secondsLeft !== lastSecond) {
-    lastSecond = secondsLeft;
-    updateClockLabel(secondsLeft);
-    startBtn.textContent = `${secondsLeft}s`;
-  }
-
-  updateClockHand(progress);
-  updateElapsedSector(progress);
-
-  if (progress >= 1) {
-    cancelAnimationFrame(countdownId);
-    countdownId = null;
-    isRunning = false;
-    startBtn.textContent = "¡Tiempo!";
-    clockSvg.classList.add("timeout-glow");
-    wordInput.focus();
+function tick(now) {
+  if (timerState !== "running") return;
+  remainingMs = Math.max(0, deadline - now);
+  renderClock();
+  if (remainingMs === 0) {
+    timerState = "finished";
+    timerFrame = null;
+    updateTimerControls();
+    setFeedback("¡Tiempo! Puedes seguir comprobando las respuestas.");
     return;
   }
-
-  countdownId = requestAnimationFrame(countdown);
+  timerFrame = requestAnimationFrame(tick);
 }
 
-function startCountdown() {
-  if (isRunning || selectedLetters.length !== maxLetters) return;
-  clockSvg.classList.remove("timeout-glow");
-  isRunning = true;
-  startTime = Date.now();
-  timeLeft = clockDuration;
-  lastSecond = timeLeft;
-  startBtn.textContent = `${timeLeft}s`;
-  updateClockLabel(timeLeft);
-  updateClockHand(0);
-  updateElapsedSector(0);
-  cancelAnimationFrame(countdownId);
-  countdownId = requestAnimationFrame(countdown);
+function toggleTimer() {
+  if (selectedLetters.length < maxLetters) return;
+  if (timerState === "running") {
+    remainingMs = Math.max(0, deadline - performance.now());
+    stopTimer();
+    timerState = "paused";
+    renderClock();
+  } else {
+    if (timerState === "finished" || timerState === "ready") remainingMs = clockDuration * 1000;
+    timerState = "running";
+    deadline = performance.now() + remainingMs;
+    stopTimer();
+    timerFrame = requestAnimationFrame(tick);
+  }
+  updateTimerControls();
 }
 
-function toggleSettings(open) {
-  settingsPanel.classList.toggle("open", open);
-  settingsPanel.setAttribute("aria-hidden", String(!open));
+function updateScore() {
+  scoreValue.textContent = `${points} ${points === 1 ? "punto" : "puntos"}`;
+  foundCount.textContent = String(acceptedWords.size);
 }
 
-consonantBtn.addEventListener("click", () => addLetter(weightedRandomLetter(consonants, consonantFrequencies)));
-vowelBtn.addEventListener("click", () => addLetter(weightedRandomLetter(vowels, vowelFrequencies)));
-startBtn.addEventListener("click", startCountdown);
-resetBtn.addEventListener("click", () => {
+function addAcceptedWord(word, original) {
+  const empty = guessList.querySelector(".empty-history");
+  if (empty) empty.remove();
+  const item = document.createElement("li");
+  item.className = "guess-item";
+  const name = document.createElement("strong");
+  name.textContent = word.toLocaleUpperCase("es");
+  const score = document.createElement("span");
+  score.className = "guess-score";
+  score.textContent = `+${Array.from(word).length}`;
+  item.append(name, score);
+  if (word.toLocaleLowerCase("es") !== original.toLocaleLowerCase("es")) {
+    const corrected = document.createElement("small");
+    corrected.textContent = `Corrección: ${original.toLocaleUpperCase("es")} → ${word.toLocaleUpperCase("es")}`;
+    item.append(corrected);
+  }
+  guessList.prepend(item);
+}
+
+function resetRound() {
+  roundId += 1; // Ignore dictionary responses from the previous round.
+  validationPending = false;
   selectedLetters = [];
-  guesses = [];
-  letterBoard.innerHTML = "";
-  guessList.innerHTML = "";
-  consonantBtn.disabled = false;
-  vowelBtn.disabled = false;
-  cancelAnimationFrame(countdownId);
-  countdownId = null;
-  isRunning = false;
-  startTime = null;
-  startBtn.textContent = "Inicio";
-  clockSvg.classList.remove("timeout-glow");
-  resetClockDisplay();
+  acceptedWords = new Set();
+  points = 0;
+  timerState = "ready";
+  stopTimer();
+  remainingMs = clockDuration * 1000;
   wordInput.value = "";
-  setSubmitState("Comprobar");
-});
-settingsToggle.addEventListener("click", () => toggleSettings(true));
-closeSettings.addEventListener("click", () => toggleSettings(false));
-
-durationInput.addEventListener("input", () => {
-  clockDuration = Number(durationInput.value);
-  durationOutput.textContent = `${clockDuration}s`;
-  cancelAnimationFrame(countdownId);
-  countdownId = null;
-  isRunning = false;
-  startTime = null;
-  startBtn.textContent = "Inicio";
-  clockSvg.classList.remove("timeout-glow");
-  resetClockDisplay();
-});
-
-wordInput.addEventListener("input", () => setSubmitState("Comprobar"));
+  guessList.replaceChildren();
+  const placeholder = document.createElement("li");
+  placeholder.className = "empty-history";
+  placeholder.textContent = "Aquí aparecerán las palabras correctas.";
+  guessList.append(placeholder);
+  renderBoard();
+  renderClock();
+  updateScore();
+  setFeedback("Las tildes y la ñ se reconocen automáticamente.");
+}
 
 wordForm.addEventListener("submit", async (event) => {
   event.preventDefault();
-  const word = wordInput.value.trim();
-  if (!word) return;
-
-  if (!usesOnlyAvailableLetters(word, selectedLetters)) {
-    setSubmitState("¡Letras inválidas!", "bad");
-    triggerShake();
+  if (validationPending || selectedLetters.length !== maxLetters) return;
+  const original = wordInput.value.trim().normalize("NFC").toLocaleLowerCase("es");
+  if (!original) return;
+  if (!/^[a-záéíóúüñ]+$/iu.test(original)) {
+    setFeedback("Utiliza una sola palabra, sin espacios ni signos.", "warning");
     return;
   }
-
-  const validWord = await isValidSpanishWord(word);
-  if (validWord) {
-    setSubmitState("¡Palabra válida!", "correct");
-  } else {
-    setSubmitState("¡Palabra inválida!", "incorrect");
-    triggerShake();
+  if (!canMakeWord(original, selectedLetters)) {
+    setFeedback("Esa palabra utiliza letras que no están disponibles.", "warning");
+    return;
   }
-
-  addGuessToList(word, validWord);
+  const key = foldSpanish(original);
+  if (acceptedWords.has(key)) {
+    setFeedback("Esa palabra ya está en la lista.", "warning");
+    return;
+  }
+  const checkingRound = roundId;
+  validationPending = true;
+  submitBtn.disabled = true;
+  setFeedback("Consultando el diccionario…");
+  const result = await lookupSpanishWord(original);
+  if (checkingRound !== roundId) return;
+  validationPending = false;
+  submitBtn.disabled = false;
+  if (result.status === "unavailable") {
+    setFeedback("No se puede consultar el diccionario. Inténtalo de nuevo; no se ha penalizado la palabra.", "warning");
+    return;
+  }
+  if (result.status !== "valid") {
+    setFeedback("No hemos encontrado esa palabra en el diccionario.", "error");
+    return;
+  }
+  const correct = result.word.toLocaleLowerCase("es");
+  acceptedWords.add(key);
+  points += Array.from(correct).length;
+  addAcceptedWord(correct, original);
+  updateScore();
+  setFeedback(correct === original ? `¡Correcto! ${correct.toLocaleUpperCase("es")}` : `¡Correcto! La forma escrita es ${correct.toLocaleUpperCase("es")}.`, "success");
+  if (wordInput.value.trim().toLocaleLowerCase("es") === original) wordInput.value = "";
+  wordInput.focus();
 });
 
-createCircleDots();
-resetClockDisplay();
+wordInput.addEventListener("input", () => {
+  if (!validationPending) setFeedback("Pulsa comprobar o la tecla Intro.");
+});
+consonantBtn.addEventListener("click", () => addLetter(weightedRandomLetter(consonants, consonantFrequencies)));
+vowelBtn.addEventListener("click", () => addLetter(weightedRandomLetter(vowels, vowelFrequencies)));
+startBtn.addEventListener("click", toggleTimer);
+byId("reset-btn").addEventListener("click", resetRound);
+byId("settings-toggle").addEventListener("click", () => settingsPanel.showModal());
+byId("close-settings").addEventListener("click", () => settingsPanel.close());
+settingsPanel.addEventListener("click", (event) => { if (event.target === settingsPanel) settingsPanel.close(); });
+durationInput.addEventListener("input", () => {
+  clockDuration = Number(durationInput.value);
+  durationOutput.textContent = `${clockDuration} s`;
+  stopTimer();
+  timerState = "ready";
+  remainingMs = clockDuration * 1000;
+  renderClock();
+  updateTimerControls();
+});
+
+resetRound();
