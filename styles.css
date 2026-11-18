@@ -36,7 +36,7 @@ h1, h2, p { margin: 0; }
   min-height: 540px;
   width: 100%;
   display: grid;
-  grid-template-rows: clamp(56px, 8.6vh, 110px) minmax(0, 1.08fr) minmax(0, .92fr);
+  grid-template-rows: clamp(56px, 8.6vh, 110px) minmax(0, 1.08fr) minmax(0, .92fr) auto;
   background:
     radial-gradient(ellipse 52% 69% at 49% 37%, rgba(0, 191, 255, .44), transparent 81%),
     radial-gradient(ellipse 37% 72% at 0% 12%, rgba(16, 122, 239, .56), transparent 88%),
@@ -260,7 +260,7 @@ h1, h2, p { margin: 0; }
 @keyframes score-bounce { 0% { transform: scale(.8); } 50% { transform: scale(1.2) rotate(-5deg); } 100% { transform: none; } }
 @keyframes sparkle { from { opacity: 1; transform: translate(0,0) rotate(0) scale(1.2); } to { opacity: 0; transform: translate(var(--dx),var(--dy)) rotate(130deg) scale(.3); } }
 @media (max-width: 900px), (orientation: portrait) {
-  .game-layout { height: auto; min-height: 100dvh; overflow: hidden; grid-template-rows: auto auto auto; }
+  .game-layout { height: auto; min-height: 100dvh; overflow: hidden; grid-template-rows: auto auto minmax(auto, 1fr) auto; }
   .topbar { padding: 18px 20px; }
   .play-stage { padding: 24px 14px 10px; gap: 24px; }
   .letter-board { grid-template-columns: repeat(3,minmax(0,1fr)); gap: clamp(7px,1.6vw,14px); }
@@ -308,6 +308,14 @@ h1, h2, p { margin: 0; }
   .timer-orbit { width: min(15vw,23vh); }
   .play-button { min-height: 42px; }
   .guess-list { min-height: 40px; max-height: 60px; }
+}
+.creator-credit {
+  position: relative;
+  text-align: center;
+  font-size: clamp(10px, 1.05vh, 13px);
+  line-height: 1.25;
+  color: #a0b8cf;
+  padding: 1px 12px clamp(5px, .8vh, 9px);
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
