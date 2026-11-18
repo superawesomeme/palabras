@@ -228,6 +228,14 @@ function resetRound() {
   setFeedback("");
 }
 
+// Keep a newer answer intact if it was typed during an asynchronous lookup.
+function clearSubmittedWord(original) {
+  if (wordInput.value.trim().normalize("NFC").toLocaleLowerCase("es") === original) {
+    wordInput.value = "";
+  }
+  wordInput.focus();
+}
+
 wordForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   if (validationPending || selectedLetters.length !== maxLetters) return;
@@ -235,15 +243,18 @@ wordForm.addEventListener("submit", async (event) => {
   if (!original) return;
   if (!/^[a-záéíóúüñ]+$/iu.test(original)) {
     setFeedback("Utiliza una sola palabra, sin espacios ni signos.", "warning");
+    clearSubmittedWord(original);
     return;
   }
   if (!canMakeWord(original, selectedLetters)) {
     setFeedback("Esa palabra utiliza letras que no están disponibles.", "warning");
+    clearSubmittedWord(original);
     return;
   }
   const key = foldSpanish(original);
   if (acceptedWords.has(key)) {
     setFeedback("Esa palabra ya está en la lista.", "warning");
+    clearSubmittedWord(original);
     return;
   }
   const checkingRound = roundId;
@@ -260,6 +271,7 @@ wordForm.addEventListener("submit", async (event) => {
   }
   if (result.status !== "valid") {
     setFeedback("No hemos encontrado esa palabra en el diccionario.", "error");
+    clearSubmittedWord(original);
     return;
   }
   const correct = result.word.toLocaleLowerCase("es");
@@ -269,8 +281,7 @@ wordForm.addEventListener("submit", async (event) => {
   updateScore();
   celebrateScore();
   setFeedback(correct === original ? `¡Correcto! ${correct.toLocaleUpperCase("es")}` : `¡Correcto! La forma escrita es ${correct.toLocaleUpperCase("es")}.`, "success");
-  if (wordInput.value.trim().toLocaleLowerCase("es") === original) wordInput.value = "";
-  wordInput.focus();
+  clearSubmittedWord(original);
 });
 
 wordInput.addEventListener("input", () => {
