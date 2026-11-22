@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#071e49">
   <title>Palabras Ocultas · Juego de letras</title>
-  <link rel="stylesheet" href="./styles.css?v=8">
+  <link rel="stylesheet" href="./styles.css?v=9">
 </head>
 <body>
   <main id="game-layout" class="game-layout" data-phase="choosing">
@@ -39,13 +39,17 @@
         <button id="vowel-btn" class="choice-button choice-vowel" type="button">
           <span class="choice-icon" aria-hidden="true">V</span><span>Vocal</span>
         </button>
+        <button id="auto-btn" class="choice-button choice-auto" type="button" title="Elegir nueve letras automáticamente">
+          <span class="choice-icon" aria-hidden="true"><svg viewBox="0 0 32 32" class="auto-face-icon"><rect x="5" y="8" width="22" height="19" rx="7"/><path d="M16 8V4m-3 0h6"/><rect x="10" y="15" width="4" height="6" rx="2"/><rect x="18" y="15" width="4" height="6" rx="2"/></svg></span>
+          <span class="auto-text">Auto</span><span class="auto-thinking" aria-hidden="true"><i></i><i></i><i></i></span>
+        </button>
       </div>
       <span id="letter-progress" class="sr-only" aria-live="polite">0 / 9</span>
       <span id="round-state" class="sr-only" aria-live="polite">Preparar ronda</span>
       <span id="phase-help" class="sr-only" aria-live="polite">Elige nueve letras para empezar.</span>
     </section>
 
-    <section class="play-dock" aria-label="Reloj, respuestas y puntuación">
+    <section class="play-dock" aria-label="Reloj, respuestas y asistente">
       <div class="timer-zone">
         <div id="timer-orbit" class="timer-orbit" aria-label="Tiempo restante">
           <svg viewBox="0 0 240 240" aria-hidden="true">
@@ -73,18 +77,49 @@
             </button>
           </div>
         </form>
-        <p id="feedback" class="feedback" role="status" aria-live="polite"></p>
         <ul id="guess-list" class="guess-list" aria-label="Palabras correctas encontradas"></ul>
+        <div id="solution-panel" class="solution-panel" hidden>
+          <span class="solution-caption">Las mejores de nuestra selección B1/B2</span>
+          <ol id="solution-list" class="solution-list" aria-label="Palabras sugeridas"></ol>
+        </div>
       </div>
 
-      <div class="score-zone" aria-label="Puntuación">
-        <div class="score-medal" aria-hidden="true">
-          <svg viewBox="0 0 64 64"><path d="m32 7 7.5 15.2 16.8 2.4-12.1 11.8 2.9 16.7L32 45.2l-15.1 7.9 2.9-16.7L7.7 24.6l16.8-2.4L32 7Z"/></svg>
+
+      <div class="mascot-zone" aria-label="Robot asistente">
+        <div id="robot-bubble" class="robot-bubble" data-visible="false" role="status" aria-live="polite" aria-atomic="true">
+          <strong id="robot-message"></strong><span id="robot-detail"></span>
         </div>
-        <div id="score-value" class="score-value" aria-live="polite">0</div>
-        <span class="score-label">PUNTOS</span>
-        <span id="found-count" class="found-count" aria-label="Palabras encontradas">0 palabras</span>
-        <div id="score-sparkles" class="score-sparkles" aria-hidden="true"></div>
+        <div id="robot-figure" class="robot-figure" data-mood="idle" role="img" aria-label="Robot del juego">
+          <svg viewBox="0 0 280 240" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="bot-shell" x1="0" x2=".9" y1="0" y2="1"><stop stop-color="#e7ffff"/><stop offset=".31" stop-color="#64f4ff"/><stop offset=".72" stop-color="#00b6df"/><stop offset="1" stop-color="#1767c2"/></linearGradient>
+              <linearGradient id="bot-screen" x1="0" x2="0" y1="0" y2="1"><stop stop-color="#15283c"/><stop offset="1" stop-color="#070f25"/></linearGradient>
+              <linearGradient id="bot-eye" x1="0" x2="0" y1="0" y2="1"><stop stop-color="#ffffbc"/><stop offset="1" stop-color="#f0f836"/></linearGradient>
+              <filter id="bot-depth" x="-30%" y="-30%" width="160%" height="180%"><feDropShadow dx="0" dy="9" stdDeviation="8" flood-color="#00112f" flood-opacity=".5"/></filter>
+            </defs>
+            <g class="bot-antenna"><path d="M140 55V29" stroke="#8ff7ff" stroke-width="9" stroke-linecap="round"/><circle cx="140" cy="23" r="12" fill="#ffe55b" stroke="#fff8bd" stroke-width="4"/></g>
+            <g class="bot-head" filter="url(#bot-depth)">
+              <rect x="29" y="87" width="25" height="57" rx="12" fill="#35c2e9" stroke="#a9faff" stroke-width="4"/>
+              <rect x="226" y="87" width="25" height="57" rx="12" fill="#35c2e9" stroke="#a9faff" stroke-width="4"/>
+              <rect x="45" y="51" width="190" height="169" rx="47" fill="url(#bot-shell)" stroke="#b8fdff" stroke-width="6"/>
+              <path d="M76 69Q140 45 204 71" stroke="#fff" stroke-opacity=".44" stroke-width="10" stroke-linecap="round" fill="none"/>
+              <rect x="67" y="87" width="146" height="107" rx="37" fill="url(#bot-screen)" stroke="#0a4a76" stroke-width="7"/>
+              <g class="bot-eyes" fill="url(#bot-eye)">
+                <rect class="bot-eye" x="99" y="115" width="23" height="42" rx="11"/>
+                <rect class="bot-eye" x="158" y="115" width="23" height="42" rx="11"/>
+              </g>
+              <path class="bot-mouth bot-mouth-neutral" d="M131 171h18" stroke="#f4ff80" stroke-width="5" stroke-linecap="round" fill="none"/>
+              <path class="bot-mouth bot-mouth-happy" d="M119 163q21 24 42 0" stroke="#f4ff80" stroke-width="6" stroke-linecap="round" fill="none"/>
+              <path class="bot-mouth bot-mouth-sad" d="M119 177q21-24 42 0" stroke="#f4ff80" stroke-width="6" stroke-linecap="round" fill="none"/>
+              <circle class="bot-cheek" cx="90" cy="168" r="7" fill="#ff8d9f"/>
+              <circle class="bot-cheek" cx="190" cy="168" r="7" fill="#ff8d9f"/>
+              <path d="M105 208h70" stroke="#baffff" stroke-width="3" opacity=".55" stroke-linecap="round"/>
+            </g>
+          </svg>
+        </div>
+        <button id="solve-btn" class="solve-button" type="button" disabled aria-expanded="false" aria-controls="solution-panel" title="Descubrir las cinco mejores palabras">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2 2.4 6.6L21 11l-6.6 2.4L12 20l-2.4-6.6L3 11l6.6-2.4L12 2Z"/><path d="M19 18v4m-2-2h4"/></svg>Resolver
+        </button>
       </div>
     </section>
     <footer class="creator-credit" lang="en">Created by Shaun Daubney</footer>
@@ -100,9 +135,11 @@
     <label for="duration-input">Duración del reloj</label>
     <div class="slider-row"><input id="duration-input" type="range" min="10" max="120" step="5" value="30"><output id="duration-output" for="duration-input">30 s</output></div>
     <p>Al cambiar la duración, el reloj se reinicia, pero se conservan las letras.</p>
+    <label class="voice-option"><input id="voice-toggle" type="checkbox" checked> Voz del robot (español)</label>
     <p class="settings-credit">Creado por Shaun Daubney · Diccionario: Datamuse</p>
   </dialog>
   <script src="./dictionary.js?v=6"></script>
-  <script src="./game.js?v=8"></script>
+  <script src="./vocabulary.js?v=1"></script>
+  <script src="./game.js?v=9"></script>
 </body>
 </html>
