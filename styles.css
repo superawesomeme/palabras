@@ -445,3 +445,43 @@ h1, h2, p { margin: 0; }
 @media (prefers-reduced-motion:reduce) {
   .bot-antenna,.bot-eye,.robot-figure[data-mood] .bot-head,.auto-thinking i { animation:none !important; }
 }
+
+
+/* Robot's answers appear in the former letter-selection row, not the learners' history. */
+.letter-controls { width: min(100%, 1580px); }
+.game-layout[data-phase="playing"] .letter-controls { visibility: visible; opacity: 1; pointer-events: auto; }
+.game-layout[data-phase="playing"] .letter-controls > .choice-button { display: none; }
+.letter-controls .solution-panel {
+  width: 100%; min-width: 0; max-height: none; min-height: 0;
+  overflow: visible; padding: 0 6px; text-align: center;
+  animation: chip-pop .28s cubic-bezier(.2,1.2,.3,1) both;
+}
+.letter-controls .solution-caption { position: absolute; width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap; }
+.letter-controls .solution-list { display:flex; flex-wrap:wrap; justify-content:center; align-items:center; gap: clamp(7px, .75vw, 16px); }
+.letter-controls .solution-list li {
+  min-height: clamp(48px, 6vh, 77px);
+  padding: .4em .7em;
+  font-size: clamp(1.05rem,1.42vw,1.85rem);
+  color: #103860;
+  background: linear-gradient(165deg,#e9f7ff 0%,#bad4e7 65%,#98bcd8 100%);
+  border: 2px solid #e9faff;
+  box-shadow: 0 5px 0 #6e9bbd, 0 11px 23px rgba(0,13,45,.25), inset 0 2px 0 rgba(255,255,255,.83);
+  border-radius: clamp(12px,1vw,20px);
+  font-weight: 1000;
+}
+.letter-controls .solution-list li b {
+  color: #ffe15d;
+  background: #193e68;
+  padding: .15em .35em;
+  border-radius: .45em;
+  font-size: .92em;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.12);
+}
+@media (max-width:900px),(orientation:portrait) {
+  .letter-controls .solution-panel { padding: 5px 0 12px; }
+  .letter-controls .solution-list li { min-height: 45px; font-size:clamp(.95rem,3.2vw,1.4rem); }
+}
+@media (max-width:540px) {
+  .letter-controls .solution-list { gap: 8px; }
+  .letter-controls .solution-list li { font-size: .9rem; min-height: 39px; padding: .36em .5em; }
+}
