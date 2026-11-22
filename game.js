@@ -83,7 +83,9 @@ function speakRobot(message) {
     speech.lang = "es-ES";
     speech.rate = .96;
     speech.pitch = 1.12;
-    const voice = window.speechSynthesis.getVoices().find(item => item.lang.toLowerCase().startsWith("es"));
+    const voices = window.speechSynthesis.getVoices();
+    const voice = voices.find(item => item.lang.toLowerCase() === "es-es") ||
+      voices.find(item => item.lang.toLowerCase().startsWith("es"));
     if (voice) speech.voice = voice;
     window.speechSynthesis.cancel();
     window.speechSynthesis.speak(speech);
