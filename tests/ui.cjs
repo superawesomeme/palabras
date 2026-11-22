@@ -75,6 +75,14 @@ const {chromium} = require("playwright");
   assert.equal(await page.locator("#translation-word").textContent(), chosen[0].word.toLocaleUpperCase("es"));
   assert.equal(await page.locator("#translation-result").textContent(), "English: " + chosen[0].word.toLocaleLowerCase("es"));
   assert.ok((await page.locator("#translation-source-link").getAttribute("href")).endsWith(encodeURIComponent(chosen[0].word)));
+  assert.equal(await page.locator("#translation-dialog").isVisible(), true);
+  const translationBounds = await page.locator("#translation-dialog").evaluate(el => {
+    const rect = el.getBoundingClientRect();
+    return {left: rect.left, right: rect.right, top: rect.top, bottom: rect.bottom};
+  });
+  assert.ok(translationBounds.left >= 0 && translationBounds.right <= 1920);
+  assert.ok(translationBounds.top >= 0 && translationBounds.bottom <= 1080);
+  await page.screenshot({path:"test-artifacts/translation-modal-1920.png"});
   await page.locator("#close-translation").click();
   assert.equal(await page.locator("#translation-dialog").isVisible(), false);
   assert.equal(await page.locator("#solution-list li").count(), 5);
