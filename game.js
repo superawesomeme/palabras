@@ -1,6 +1,7 @@
 "use strict";
 
 const { foldSpanish, canMakeWord, lookupSpanishWord } = globalThis.PalabrasDictionary;
+const { chooseAutoWord, shuffleLetters, findSolutions } = globalThis.PalabrasVocabulary;
 const consonants = "BCDFGHJKLMNPQRSTVWXYZ";
 const consonantFrequencies = [2, 1, 4, 3, 1, 1, 1, 1, 4, 1, 5, 2, 1, 6, 6, 3, 3, 1, 1, 1, 1];
 const vowels = "AEIOU";
@@ -16,6 +17,8 @@ const phaseHelp = byId("phase-help");
 const roundState = byId("round-state");
 const consonantBtn = byId("consonant-btn");
 const vowelBtn = byId("vowel-btn");
+const autoBtn = byId("auto-btn");
+const solveBtn = byId("solve-btn");
 const startBtn = byId("start-btn");
 const startLabel = byId("start-label");
 const startIconPath = byId("start-icon").querySelector("path");
@@ -27,19 +30,23 @@ const durationBadge = byId("duration-badge");
 const wordForm = byId("word-form");
 const wordInput = byId("word-input");
 const submitBtn = byId("submit-btn");
-const feedback = byId("feedback");
 const guessList = byId("guess-list");
-const foundCount = byId("found-count");
-const scoreValue = byId("score-value");
-const scoreZone = document.querySelector(".score-zone");
-const scoreSparkles = byId("score-sparkles");
+const solutionPanel = byId("solution-panel");
+const solutionList = byId("solution-list");
+const robotFigure = byId("robot-figure");
+const robotBubble = byId("robot-bubble");
+const robotMessage = byId("robot-message");
+const robotDetail = byId("robot-detail");
+const voiceToggle = byId("voice-toggle");
 const settingsPanel = byId("settings-panel");
 const durationInput = byId("duration-input");
 const durationOutput = byId("duration-output");
 
 let selectedLetters = [];
 let acceptedWords = new Set();
-let points = 0;
+let autoPicking = false;
+let lastAutoWord = "";
+let solutionsShown = false;
 let clockDuration = 30;
 let remainingMs = clockDuration * 1000;
 let deadline = 0;
@@ -58,24 +65,119 @@ function weightedRandomLetter(letters, frequencies) {
   return letters[letters.length - 1];
 }
 
-function setFeedback(message, tone = "neutral") {
-  feedback.textContent = message;
-  feedback.dataset.tone = tone;
+function speakRobot(message) {
+  if (!voiceToggle.checked || !("speechSynthesis" in window) || !("SpeechSynthesisUtterance" in window)) return;
+  try {
+    const speech = new SpeechSynthesisUtterance(message);
+    speech.lang = "es-ES";
+    speech.rate = .96;
+    speech.pitch = 1.12;
+    const voice = window.speechSynthesis.getVoices().find(item => item.lang.toLowerCase().startsWith("es"));
+    if (voice) speech.voice = voice;
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(speech);
+  } catch (_) {
+    // Visual and accessible speech bubbles always work without audio support.
+  }
+}
+
+function setFeedback(message, tone = "neutral", detail = "") {
+  robotMessage.textContent = message;
+  robotDetail.textContent = detail;
+  robotBubble.dataset.visible = String(Boolean(message));
+  robotBubble.dataset.tone = tone === "success" ? "happy" : tone === "error" ? "sad" : "neutral";
+  const mood = tone === "success" ? "happy" : tone === "error" ? "sad" : tone === "checking" ? "thinking" : "idle";
+  robotFigure.dataset.mood = "idle";
+  void robotFigure.offsetWidth;
+  robotFigure.dataset.mood = mood;
+  robotFigure.setAttribute("aria-label", message ? `Robot: ${message} ${detail}` : "Robot del juego");
+  if (tone === "success" || tone === "error") speakRobot(message);
+}
+
+function closeSolutions() {
+  solutionsShown = false;
+  solutionPanel.hidden = true;
+  guessList.hidden = false;
+  solveBtn.setAttribute("aria-expanded", "false");
+}
+
+function toggleSolutions() {
+  if (selectedLetters.length !== maxLetters) return;
+  if (solutionsShown) {
+    closeSolutions();
+    setFeedback("");
+    return;
+  }
+  if (timerState === "running") toggleTimer();
+  const solutions = findSolutions(selectedLetters);
+  solutionList.replaceChildren();
+  for (const {word, score} of solutions) {
+    const item = document.createElement("li");
+    const label = document.createElement("span");
+    label.textContent = word.toLocaleUpperCase("es");
+    const length = document.createElement("b");
+    length.textContent = String(score);
+    length.setAttribute("aria-label", `${score} letras`);
+    item.append(label, length);
+    solutionList.append(item);
+  }
+  solutionsShown = true;
+  solutionPanel.hidden = false;
+  guessList.hidden = true;
+  solveBtn.setAttribute("aria-expanded", "true");
+  if (!solutions.length) {
+    setFeedback("No encuentro palabras", "neutral", "Prueba con otra combinación");
+  } else {
+    setFeedback("¡A resolver!", "success", `${solutions.length} palabras B1/B2`);
+    // Speech bubbles are the primary announcement; voice is optional.
+    speakRobot(solutions.map(item => item.word).join(", "));
+  }
+}
+
+const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+async function chooseAutomaticLetters() {
+  if (autoPicking || selectedLetters.length === maxLetters) return;
+  resetRound(); // Auto always generates a fresh nine-letter puzzle.
+  autoPicking = true;
+  const activeRound = roundId;
+  const word = chooseAutoWord(Math.random, lastAutoWord);
+  lastAutoWord = word;
+  const letters = shuffleLetters(word);
+  renderBoard();
+  setFeedback("Pensando…", "checking");
+  for (const letter of letters) {
+    if (roundId !== activeRound) return;
+    const button = "AEIOU".includes(letter) ? vowelBtn : consonantBtn;
+    button.classList.add("simulated-press");
+    await wait(145);
+    if (roundId !== activeRound) { button.classList.remove("simulated-press"); return; }
+    addLetter(letter);
+    button.classList.remove("simulated-press");
+    await wait(125);
+  }
+  if (roundId !== activeRound) return;
+  autoPicking = false;
+  renderBoard();
+  setFeedback("");
 }
 
 function renderBoard() {
+  const previous = [...board.children];
   board.replaceChildren();
   for (let i = 0; i < maxLetters; i += 1) {
     if (i < selectedLetters.length) {
-      const tile = document.createElement("button");
+      const tile = previous[i]?.classList.contains("tile") && previous[i].textContent === selectedLetters[i]
+        ? previous[i] : document.createElement("button");
+      const isNewTile = !tile.classList.contains("tile");
       tile.type = "button";
       tile.className = "tile";
       tile.textContent = selectedLetters[i];
       tile.dataset.kind = "AEIOU".includes(selectedLetters[i]) ? "vowel" : "consonant";
       tile.title = `Añadir ${selectedLetters[i]} a la palabra`;
       tile.setAttribute("aria-label", `Añadir letra ${selectedLetters[i]}`);
-      tile.addEventListener("click", () => {
+      if (isNewTile) tile.addEventListener("click", () => {
         if (wordInput.disabled || wordInput.value.length >= maxLetters) return;
+        closeSolutions();
         wordInput.value += tile.textContent.toLocaleLowerCase("es");
         setFeedback("");
         wordInput.focus();
@@ -89,8 +191,12 @@ function renderBoard() {
     }
   }
   const complete = selectedLetters.length === maxLetters;
-  consonantBtn.disabled = complete;
-  vowelBtn.disabled = complete;
+  consonantBtn.disabled = complete || autoPicking;
+  vowelBtn.disabled = complete || autoPicking;
+  autoBtn.disabled = complete || autoPicking;
+  autoBtn.dataset.thinking = String(autoPicking);
+  layout.dataset.autopick = String(autoPicking);
+  solveBtn.disabled = !complete || autoPicking;
   wordInput.disabled = !complete;
   submitBtn.disabled = !complete || validationPending;
   progressLabel.textContent = `${selectedLetters.length} / ${maxLetters}`;
@@ -147,7 +253,7 @@ function tick(now) {
     timerState = "finished";
     timerFrame = null;
     updateTimerControls();
-    setFeedback("¡Tiempo! Puedes seguir comprobando las respuestas.");
+    setFeedback("¡Tiempo!", "neutral", "Puedes seguir comprobando palabras");
     return;
   }
   timerFrame = requestAnimationFrame(tick);
@@ -170,11 +276,6 @@ function toggleTimer() {
   updateTimerControls();
 }
 
-function updateScore() {
-  foundCount.textContent = `${acceptedWords.size} ${acceptedWords.size === 1 ? "palabra" : "palabras"}`;
-  scoreValue.textContent = String(points);
-}
-
 function addAcceptedWord(word, original) {
   const item = document.createElement("li");
   item.className = "guess-item";
@@ -193,38 +294,24 @@ function addAcceptedWord(word, original) {
 }
 
 
-function celebrateScore() {
-  scoreZone.classList.remove("score-bump");
-  void scoreZone.offsetWidth;
-  scoreZone.classList.add("score-bump");
-  scoreSparkles.replaceChildren();
-  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-  for (let i = 0; i < 9; i += 1) {
-    const sparkle = document.createElement("span");
-    const angle = (i / 9) * Math.PI * 2;
-    sparkle.style.setProperty("--dx", `${Math.cos(angle) * (50 + (i % 3) * 18)}px`);
-    sparkle.style.setProperty("--dy", `${Math.sin(angle) * (50 + (i % 3) * 18)}px`);
-    scoreSparkles.append(sparkle);
-  }
-  setTimeout(() => scoreSparkles.replaceChildren(), 850);
-}
-
 function resetRound() {
   roundId += 1; // Ignore dictionary responses from the previous round.
   validationPending = false;
+  autoPicking = false;
   selectedLetters = [];
   acceptedWords = new Set();
-  points = 0;
   timerState = "ready";
   stopTimer();
   remainingMs = clockDuration * 1000;
   wordInput.value = "";
   guessList.replaceChildren();
-  scoreSparkles.replaceChildren();
-  scoreZone.classList.remove("score-bump");
+  solutionList.replaceChildren();
+  closeSolutions();
+  consonantBtn.classList.remove("simulated-press");
+  vowelBtn.classList.remove("simulated-press");
+  if ("speechSynthesis" in window) window.speechSynthesis.cancel();
   renderBoard();
   renderClock();
-  updateScore();
   setFeedback("");
 }
 
@@ -242,53 +329,54 @@ wordForm.addEventListener("submit", async (event) => {
   const original = wordInput.value.trim().normalize("NFC").toLocaleLowerCase("es");
   if (!original) return;
   if (!/^[a-záéíóúüñ]+$/iu.test(original)) {
-    setFeedback("Utiliza una sola palabra, sin espacios ni signos.", "warning");
+    setFeedback("¡Incorrecto!", "error", "Escribe una sola palabra");
     clearSubmittedWord(original);
     return;
   }
   if (!canMakeWord(original, selectedLetters)) {
-    setFeedback("Esa palabra utiliza letras que no están disponibles.", "warning");
+    setFeedback("¡Incorrecto!", "error", "Letras no disponibles");
     clearSubmittedWord(original);
     return;
   }
   const key = foldSpanish(original);
   if (acceptedWords.has(key)) {
-    setFeedback("Esa palabra ya está en la lista.", "warning");
+    setFeedback("¡Repetida!", "neutral", "Ya está en la lista");
     clearSubmittedWord(original);
     return;
   }
   const checkingRound = roundId;
   validationPending = true;
   submitBtn.disabled = true;
-  setFeedback("Consultando el diccionario…");
+  setFeedback("Pensando…", "checking");
   const result = await lookupSpanishWord(original);
   if (checkingRound !== roundId) return;
   validationPending = false;
   submitBtn.disabled = false;
   if (result.status === "unavailable") {
-    setFeedback("No se puede consultar el diccionario. Inténtalo de nuevo; no se ha penalizado la palabra.", "warning");
+    setFeedback("Sin conexión", "neutral", "Inténtalo otra vez");
     return;
   }
   if (result.status !== "valid") {
-    setFeedback("No hemos encontrado esa palabra en el diccionario.", "error");
+    setFeedback("¡Incorrecto!", "error", "No aparece en el diccionario");
     clearSubmittedWord(original);
     return;
   }
   const correct = result.word.toLocaleLowerCase("es");
   acceptedWords.add(key);
-  points += Array.from(correct).length;
   addAcceptedWord(correct, original);
-  updateScore();
-  celebrateScore();
-  setFeedback(correct === original ? `¡Correcto! ${correct.toLocaleUpperCase("es")}` : `¡Correcto! La forma escrita es ${correct.toLocaleUpperCase("es")}.`, "success");
+  closeSolutions();
+  setFeedback("¡Correcto!", "success", correct === original ? "" : correct.toLocaleUpperCase("es"));
   clearSubmittedWord(original);
 });
 
 wordInput.addEventListener("input", () => {
+  closeSolutions();
   if (!validationPending) setFeedback("");
 });
 consonantBtn.addEventListener("click", () => addLetter(weightedRandomLetter(consonants, consonantFrequencies)));
 vowelBtn.addEventListener("click", () => addLetter(weightedRandomLetter(vowels, vowelFrequencies)));
+autoBtn.addEventListener("click", chooseAutomaticLetters);
+solveBtn.addEventListener("click", toggleSolutions);
 startBtn.addEventListener("click", toggleTimer);
 byId("reset-btn").addEventListener("click", resetRound);
 byId("settings-toggle").addEventListener("click", () => settingsPanel.showModal());
@@ -298,7 +386,7 @@ fullscreenBtn.addEventListener("click", async () => {
     if (document.fullscreenElement) await document.exitFullscreen();
     else await document.documentElement.requestFullscreen();
   } catch (_) {
-    setFeedback("Pantalla completa no disponible en este navegador.", "warning");
+    setFeedback("Pantalla completa", "neutral", "No disponible en este navegador");
   }
 });
 document.addEventListener("fullscreenchange", () => {
