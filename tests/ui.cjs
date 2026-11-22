@@ -18,6 +18,7 @@ const {chromium} = require("playwright");
   assert.equal(await page.locator("#auto-btn").isVisible(), true);
   await page.locator("#auto-btn").click();
   await page.waitForFunction(() => document.querySelectorAll("#letter-board .tile").length === 9, null, {timeout: 10000});
+  await page.waitForFunction(() => !document.querySelector("#solve-btn").disabled);
   assert.equal(await page.locator("#auto-btn").isVisible(), false);
   assert.equal(await page.locator("#solve-btn").isEnabled(), true);
   const tiles = await page.locator("#letter-board .tile").allTextContents();
