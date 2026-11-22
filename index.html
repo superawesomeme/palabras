@@ -5,7 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#071e49">
   <title>Palabras Ocultas · Juego de letras</title>
-  <link rel="stylesheet" href="./styles.css?v=11">
+  <link rel="icon" type="image/svg+xml" href="./favicon.svg?v=1">
+  <link rel="stylesheet" href="./styles.css?v=12">
 </head>
 <body>
   <main id="game-layout" class="game-layout" data-phase="choosing">
@@ -139,8 +140,23 @@
     <label class="voice-option"><input id="voice-toggle" type="checkbox" checked> Voz del robot (español)</label>
     <p class="settings-credit">Creado por Shaun Daubney · Diccionario: Datamuse</p>
   </dialog>
+  <dialog id="translation-dialog" class="translation-dialog" aria-labelledby="translation-word">
+    <div class="translation-head">
+      <span class="translation-kicker">ESPAÑOL → ENGLISH</span>
+      <button id="close-translation" class="tool-button close-button" type="button" aria-label="Cerrar traducción">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5 19 19M19 5 5 19"/></svg>
+      </button>
+    </div>
+    <h2 id="translation-word" lang="es"></h2>
+    <div class="translation-divider" aria-hidden="true"></div>
+    <p id="translation-result" class="translation-result" lang="en" role="status" aria-live="polite"></p>
+    <p class="translation-note">Traducción orientativa. El significado depende del contexto.</p>
+    <a id="translation-source-link" class="translation-source-link" href="https://www.spanishdict.com/" target="_blank" rel="noopener noreferrer">Ver en SpanishDict <span aria-hidden="true">↗</span></a>
+    <span class="translation-provider">Traducción automática: MyMemory · Requiere conexión</span>
+  </dialog>
   <script src="./dictionary.js?v=6"></script>
   <script src="./vocabulary.js?v=1"></script>
-  <script src="./game.js?v=11"></script>
+  <script src="./translation.js?v=1"></script>
+  <script src="./game.js?v=12"></script>
 </body>
 </html>
