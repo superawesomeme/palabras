@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#071e49">
   <title>Palabras Ocultas · Juego de letras</title>
-  <link rel="stylesheet" href="./styles.css?v=9">
+  <link rel="stylesheet" href="./styles.css?v=10">
 </head>
 <body>
   <main id="game-layout" class="game-layout" data-phase="choosing">
@@ -43,6 +43,10 @@
           <span class="choice-icon" aria-hidden="true"><svg viewBox="0 0 32 32" class="auto-face-icon"><rect x="5" y="8" width="22" height="19" rx="7"/><path d="M16 8V4m-3 0h6"/><rect x="10" y="15" width="4" height="6" rx="2"/><rect x="18" y="15" width="4" height="6" rx="2"/></svg></span>
           <span class="auto-text">Auto</span><span class="auto-thinking" aria-hidden="true"><i></i><i></i><i></i></span>
         </button>
+        <div id="solution-panel" class="solution-panel" hidden>
+          <span class="solution-caption">Las mejores de nuestra selección B1/B2</span>
+          <ol id="solution-list" class="solution-list" aria-label="Palabras sugeridas"></ol>
+        </div>
       </div>
       <span id="letter-progress" class="sr-only" aria-live="polite">0 / 9</span>
       <span id="round-state" class="sr-only" aria-live="polite">Preparar ronda</span>
@@ -78,10 +82,7 @@
           </div>
         </form>
         <ul id="guess-list" class="guess-list" aria-label="Palabras correctas encontradas"></ul>
-        <div id="solution-panel" class="solution-panel" hidden>
-          <span class="solution-caption">Las mejores de nuestra selección B1/B2</span>
-          <ol id="solution-list" class="solution-list" aria-label="Palabras sugeridas"></ol>
-        </div>
+
       </div>
 
 
@@ -140,6 +141,6 @@
   </dialog>
   <script src="./dictionary.js?v=6"></script>
   <script src="./vocabulary.js?v=1"></script>
-  <script src="./game.js?v=9"></script>
+  <script src="./game.js?v=10"></script>
 </body>
 </html>
