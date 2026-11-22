@@ -28,6 +28,17 @@ const {chromium} = require("playwright");
   await page.screenshot({path:"test-artifacts/auto-ready.png"});
   await page.locator("#solve-btn").click();
   assert.equal(await page.locator("#solution-list li").count(), 5);
+  // Robot solutions belong to the former letter-choice row, never to pupil guesses.
+  assert.equal(await page.locator("#solution-panel").evaluate(el => el.parentElement.classList.contains("letter-controls")), true);
+  assert.equal(await page.locator("#guess-list").isVisible(), true);
+  const robotAnswerColours = await page.locator("#solution-list li").first().evaluate(el => ({
+    tileText: getComputedStyle(el).color,
+    tileFill: getComputedStyle(el).backgroundImage,
+    scoreText: getComputedStyle(el.querySelector("b")).color
+  }));
+  assert.equal(robotAnswerColours.tileText, "rgb(16, 56, 96)");
+  assert.ok(robotAnswerColours.tileFill.includes("rgb(233, 247, 255)"));
+  assert.equal(robotAnswerColours.scoreText, "rgb(255, 225, 93)");
   assert.equal(await page.locator("#robot-message").textContent(), "¡A resolver!");
   await page.screenshot({path:"test-artifacts/resolver.png"});
   await page.locator("#solve-btn").click();
@@ -39,6 +50,11 @@ const {chromium} = require("playwright");
   assert.equal(await page.locator("#word-input").inputValue(), "");
   assert.equal(await page.locator("#guess-list li").count(), 1);
   assert.equal(await page.locator("#robot-figure").getAttribute("data-mood"), "happy");
+  await page.locator("#solve-btn").click();
+  assert.equal(await page.locator("#solution-list li").count(), 5);
+  assert.equal(await page.locator("#guess-list li").count(), 1);
+  assert.equal(await page.locator("#guess-list").isVisible(), true);
+  await page.locator("#solve-btn").click();
   await page.screenshot({path:"test-artifacts/happy.png"});
   await page.locator("#word-input").fill("ZZZZ");
   await page.locator("#submit-btn").click();
