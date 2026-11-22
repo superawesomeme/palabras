@@ -16,6 +16,7 @@ const {chromium} = require("playwright");
   await page.goto("file://" + path.resolve("index.html"));
   assert.equal(await page.locator("#letter-board .tile").count(), 0);
   assert.equal(await page.locator("#auto-btn").isVisible(), true);
+  assert.equal(await page.evaluate(() => window.PalabrasVocabulary.AUTO_WORDS.length), 600);
   await page.screenshot({path:"test-artifacts/choosing-1920.png"});
   await page.locator("#auto-btn").click();
   await page.waitForFunction(() => document.querySelectorAll("#letter-board .tile").length === 9, null, {timeout: 10000});
@@ -28,6 +29,16 @@ const {chromium} = require("playwright");
   await page.screenshot({path:"test-artifacts/auto-ready.png"});
   await page.locator("#solve-btn").click();
   assert.equal(await page.locator("#solution-list li").count(), 5);
+  assert.equal(await page.locator(".letter-controls #solution-panel").count(), 1, "Robot answers must appear beneath the rack");
+  assert.equal(await page.locator(".answer-zone #solution-panel").count(), 0, "Robot answers must not share the learner history panel");
+  const robotChip = await page.locator("#solution-list li").first().evaluate(el => ({
+    foreground: getComputedStyle(el).color,
+    background: getComputedStyle(el).backgroundImage,
+    points: getComputedStyle(el.querySelector("b")).color
+  }));
+  assert.equal(robotChip.foreground, "rgb(16, 56, 96)");
+  assert.equal(robotChip.points, "rgb(255, 225, 93)");
+  assert.ok(robotChip.background.includes("linear-gradient"));
   assert.equal(await page.locator("#robot-message").textContent(), "¡A resolver!");
   await page.screenshot({path:"test-artifacts/resolver.png"});
   await page.locator("#solve-btn").click();
@@ -38,6 +49,10 @@ const {chromium} = require("playwright");
   await page.waitForFunction(() => document.querySelector("#robot-message")?.textContent === "¡Correcto!");
   assert.equal(await page.locator("#word-input").inputValue(), "");
   assert.equal(await page.locator("#guess-list li").count(), 1);
+  await page.locator("#solve-btn").click();
+  assert.equal(await page.locator("#guess-list").isVisible(), true, "Pupils' guesses remain visible when Resolver opens");
+  assert.equal(await page.locator("#guess-list li").count(), 1);
+  await page.locator("#solve-btn").click();
   assert.equal(await page.locator("#robot-figure").getAttribute("data-mood"), "happy");
   await page.screenshot({path:"test-artifacts/happy.png"});
   await page.locator("#word-input").fill("ZZZZ");
