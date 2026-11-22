@@ -18,8 +18,9 @@ jobs:
           node --check game.js
           node --check dictionary.js
           node --check vocabulary.js
+          node --check translation.js
       - name: Vocabulary tests
-        run: node --test tests/dictionary.test.js tests/vocabulary.test.js
+        run: node --test tests/dictionary.test.js tests/vocabulary.test.js tests/translation.test.js
       - name: Install browser
         run: |
           npm install --no-save playwright

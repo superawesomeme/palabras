@@ -25,10 +25,26 @@ const {chromium} = require("playwright");
   });
   page.on("pageerror", error => errors.push(error.message));
   let answer = "";
+  let translationCount = 0;
+  await page.route("https://api.mymemory.translated.net/get?**", async route => {
+    translationCount++;
+    const term = new URL(route.request().url()).searchParams.get("q");
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      headers: {"Access-Control-Allow-Origin": "*"},
+      body: JSON.stringify({responseStatus: 200, responseData: {translatedText: "English: " + term}})
+    });
+  });
   await page.route("https://api.datamuse.com/**", async route => {
     await route.fulfill({status: 200, contentType:"application/json", body: JSON.stringify(answer ? [{word: answer}] : [])});
   });
   await page.goto("file://" + path.resolve("index.html"));
+  assert.equal(await page.locator('link[rel="icon"][type="image/svg+xml"]').count(), 1);
+  const iconSvg = fs.readFileSync("favicon.svg", "utf8");
+  assert.ok(iconSvg.includes('viewBox="0 0 128 128"'));
+  assert.ok(iconSvg.includes('fill="url(#gold-face)"'));
+  assert.ok(!iconSvg.includes("#071e49"));
   assert.equal(await page.locator("#letter-board .tile").count(), 0);
   assert.equal(await page.locator("#auto-btn").isVisible(), true);
   assert.equal(await page.locator("#robot-detail").count(), 0);
@@ -54,6 +70,14 @@ const {chromium} = require("playwright");
   await page.screenshot({path:"test-artifacts/auto-ready.png"});
   await page.locator("#solve-btn").click();
   assert.equal(await page.locator("#solution-list li").count(), 5);
+  await page.locator("#solution-list li button").first().click();
+  await page.waitForFunction(() => document.querySelector("#translation-result")?.dataset.state === "ready");
+  assert.equal(await page.locator("#translation-word").textContent(), chosen[0].word.toLocaleUpperCase("es"));
+  assert.equal(await page.locator("#translation-result").textContent(), "English: " + chosen[0].word.toLocaleLowerCase("es"));
+  assert.ok((await page.locator("#translation-source-link").getAttribute("href")).endsWith(encodeURIComponent(chosen[0].word)));
+  await page.locator("#close-translation").click();
+  assert.equal(await page.locator("#translation-dialog").isVisible(), false);
+  assert.equal(await page.locator("#solution-list li").count(), 5);
   // Robot solutions belong to the former letter-choice row, never to pupil guesses.
   assert.equal(await page.locator("#solution-panel").evaluate(el => el.parentElement.classList.contains("letter-controls")), true);
   assert.equal(await page.locator("#guess-list").isVisible(), true);
@@ -75,6 +99,13 @@ const {chromium} = require("playwright");
   await page.waitForFunction(() => document.querySelector("#robot-message")?.textContent === "¡Correcto!");
   assert.equal(await page.locator("#word-input").inputValue(), "");
   assert.equal(await page.locator("#guess-list li").count(), 1);
+  await page.locator("#guess-list li button.guess-lookup").first().click();
+  await page.waitForFunction(() => document.querySelector("#translation-result")?.dataset.state === "ready");
+  assert.equal(await page.locator("#translation-word").textContent(), answer.toLocaleUpperCase("es"));
+  assert.equal(await page.locator("#translation-result").textContent(), "English: " + answer.toLocaleLowerCase("es"));
+  await page.keyboard.press("Escape");
+  assert.equal(await page.locator("#translation-dialog").isVisible(), false);
+  assert.ok(translationCount >= 1);
   assert.equal(await page.locator("#robot-figure").getAttribute("data-mood"), "happy");
   const spokenCorrect = await page.evaluate(() => window.__spoken.at(-1));
   assert.equal(spokenCorrect.text, `La palabra «${answer}» es correcta.`);
