@@ -1,7 +1,7 @@
 name: Palabras UI and vocabulary checks
 on:
   push:
-    branches: [main, feat/robot-mascot-auto-resolver]
+    branches: [main, "feat/**", "fix/**", "improve/**"]
   pull_request:
 jobs:
   validate:
