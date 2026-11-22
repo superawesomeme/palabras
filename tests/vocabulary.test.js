@@ -3,7 +3,7 @@ const assert = require("node:assert/strict");
 const {AUTO_WORDS, WORDS, fold, canBuild, shuffleLetters, chooseAutoWord, findSolutions} = require("../vocabulary.js");
 
 test("every auto seed is an accessible nine-letter word", () => {
-  assert.equal(AUTO_WORDS.length, 24);
+  assert.equal(AUTO_WORDS.length, 600);
   for (const word of AUTO_WORDS) {
     assert.match(word, /^[a-záéíóúüñ]+$/i, word);
     assert.equal([...fold(word)].length, 9, word);
@@ -19,6 +19,15 @@ test("shuffling does not add or lose letter tiles, including accents and ñ", ()
   }
   assert.equal(canBuild("compañero", [..."COMPANERO"]), true);
   assert.equal(canBuild("compañero", [..."COMPANERO".replace("O", "")]), false);
+});
+
+test("Auto respects a hundred recently used words across lessons", () => {
+  const recent = AUTO_WORDS.slice(0, 100);
+  for (const p of [0, .2, .5, .99]) {
+    const next = chooseAutoWord(() => p, recent);
+    assert.ok(!recent.includes(next));
+  }
+  assert.equal(new Set(AUTO_WORDS.map(fold)).size, 600);
 });
 
 test("Auto avoids repeating the immediately previous word", () => {
