@@ -18,9 +18,26 @@ const choices=eligible.length?eligible:AUTO_WORDS;
 return choices[Math.min(choices.length-1,Math.floor(Math.max(0,Math.min(.999999999,random()))*choices.length))];
 }
 function similar(a,b){const x=fold(a),y=fold(b),n=Math.min(x.length,y.length);return x===y||(n>=5&&x.slice(0,n-2)===y.slice(0,n-2))||(n>=6&&x.slice(0,n-1)===y.slice(0,n-1));}
+
+/* Subtitle frequency data contains names, English interjections and adult terms.
+   Keep these out of classroom hints without affecting normal dictionary checks. */
+const SUGGESTION_EXCLUSIONS = new Set([
+  "puta","puto","putas","putos","mierda","mierdas","cago","coño",
+  "polla","pollas","tetas","sexy","porno","pornografía","esperma",
+  "semen","violó","violaron","violado","violación","follar",
+  "joder","jodido","jodida","cabrones","cabrón","desnudos",
+  "desnudas","desnuda","desnudo","borrachos","nazi","nazis",
+  "elvis","randall","valerie","buddy","angie","hammond","felix",
+  "sasha","austin","campbell","griffin","marilyn","sherlock",
+  "denny","reagan","bennett","melanie","sheldon","stevens",
+  "einstein","arizona","facebook","silver","cool","like","out",
+  "get","know","time","road","have","but","flynn","poirot",
+  "saint","wells","cliff","polly","chad","rudy","vicky",
+  "halloween"
+].map(fold));
 function findSolutions(letters,limit=5){
 if(!Array.isArray(letters)||!letters.length)return[];
-const candidates=[...new Map([...AUTO_WORDS,...WORDS].filter(word=>[...fold(word)].length>=3&&[...fold(word)].length<=letters.length&&canBuild(word,letters)).map(word=>[fold(word),word])).values()];
+const candidates=[...new Map([...AUTO_WORDS,...WORDS].filter(word=>[...fold(word)].length>=3&&[...fold(word)].length<=letters.length&&canBuild(word,letters)&&!SUGGESTION_EXCLUSIONS.has(fold(word))).map(word=>[fold(word),word])).values()];
 candidates.sort((a,b)=>[...b].length-[...a].length||a.localeCompare(b,"es"));
 const chosen=[],used=new Set();
 for(const word of candidates){if(chosen.every(existing=>!similar(existing,word))){chosen.push(word);used.add(fold(word));if(chosen.length>=limit)break;}}
