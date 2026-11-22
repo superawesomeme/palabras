@@ -61,3 +61,14 @@ test("Resolver handles arbitrary or empty racks safely", () => {
   assert.equal(canBuild("día", [..."DIA"]), true);
   assert.ok(WORDS.length >= 500);
 });
+
+test("Resolver does not suggest unsuitable subtitle names, English interjections or adult terms", () => {
+  for (const word of ["mierdas", "polla", "violó", "tetas", "sexy", "esperma", "elvis", "sherlock"]) {
+    const suggestions = findSolutions([...fold(word).toUpperCase()], 100);
+    assert.equal(suggestions.some(s => fold(s.word) === fold(word)), false, word);
+  }
+  assert.ok(AUTO_WORDS.includes("cocinando"));
+  assert.ok(AUTO_WORDS.includes("escolares"));
+  assert.ok(!AUTO_WORDS.includes("halloween"));
+  assert.ok(!AUTO_WORDS.includes("borrachos"));
+});
