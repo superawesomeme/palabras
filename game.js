@@ -97,7 +97,6 @@ function setFeedback(message, tone = "neutral", detail = "") {
 function closeSolutions() {
   solutionsShown = false;
   solutionPanel.hidden = true;
-  guessList.hidden = false;
   solveBtn.setAttribute("aria-expanded", "false");
 }
 
@@ -123,7 +122,6 @@ function toggleSolutions() {
   }
   solutionsShown = true;
   solutionPanel.hidden = false;
-  guessList.hidden = true;
   solveBtn.setAttribute("aria-expanded", "true");
   if (!solutions.length) {
     setFeedback("No encuentro palabras", "neutral", "Prueba con otra combinación");
