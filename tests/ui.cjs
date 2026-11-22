@@ -74,7 +74,11 @@ const {chromium} = require("playwright");
   await page.waitForFunction(() => document.querySelector("#translation-result")?.dataset.state === "ready");
   assert.equal(await page.locator("#translation-word").textContent(), chosen[0].word.toLocaleUpperCase("es"));
   assert.equal(await page.locator("#translation-result").textContent(), "English: " + chosen[0].word.toLocaleLowerCase("es"));
-  assert.ok((await page.locator("#translation-source-link").getAttribute("href")).endsWith(encodeURIComponent(chosen[0].word)));
+  for (const removed of ["translation-kicker", "translation-note", "translation-source-link", "translation-provider"]) {
+    assert.equal(await page.locator("." + removed + ",#" + removed).count(), 0);
+  }
+  const fontFamily = await page.locator("body").evaluate(el => getComputedStyle(el).fontFamily);
+  assert.match(fontFamily, /Helvetica Neue.*Helvetica.*Arial/);
   assert.equal(await page.locator("#translation-dialog").isVisible(), true);
   const translationBounds = await page.locator("#translation-dialog").evaluate(el => {
     const rect = el.getBoundingClientRect();
