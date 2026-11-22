@@ -8,6 +8,21 @@ const {chromium} = require("playwright");
   const browser = await chromium.launch({headless: true});
   const page = await browser.newPage({viewport: {width: 1920, height: 1080}});
   const errors = [];
+  // Capture spoken sentences without needing a Spanish voice installed on CI.
+  await page.addInitScript(() => {
+    window.__spoken = [];
+    window.SpeechSynthesisUtterance = class {
+      constructor(text) { this.text = text; this.lang = ""; }
+    };
+    Object.defineProperty(window, "speechSynthesis", {
+      configurable: true,
+      value: {
+        getVoices: () => [],
+        cancel: () => {},
+        speak: utterance => window.__spoken.push({text: utterance.text, lang: utterance.lang})
+      }
+    });
+  });
   page.on("pageerror", error => errors.push(error.message));
   let answer = "";
   await page.route("https://api.datamuse.com/**", async route => {
@@ -16,6 +31,17 @@ const {chromium} = require("playwright");
   await page.goto("file://" + path.resolve("index.html"));
   assert.equal(await page.locator("#letter-board .tile").count(), 0);
   assert.equal(await page.locator("#auto-btn").isVisible(), true);
+  assert.equal(await page.locator("#robot-detail").count(), 0);
+  const buttonDepths = await page.locator("#consonant-btn, #vowel-btn, #auto-btn").evaluateAll(buttons =>
+    buttons.map(button => ({
+      border: getComputedStyle(button).borderTopWidth,
+      radius: getComputedStyle(button).borderTopLeftRadius,
+      shadow: getComputedStyle(button).boxShadow
+    }))
+  );
+  assert.ok(buttonDepths.every(button => button.border === "3px"));
+  assert.ok(buttonDepths.every(button => button.shadow.includes("8px 0px")));
+  assert.equal(new Set(buttonDepths.map(button => button.radius)).size, 1);
   await page.screenshot({path:"test-artifacts/choosing-1920.png"});
   await page.locator("#auto-btn").click();
   await page.waitForFunction(() => document.querySelectorAll("#letter-board .tile").length === 9, null, {timeout: 10000});
@@ -50,6 +76,9 @@ const {chromium} = require("playwright");
   assert.equal(await page.locator("#word-input").inputValue(), "");
   assert.equal(await page.locator("#guess-list li").count(), 1);
   assert.equal(await page.locator("#robot-figure").getAttribute("data-mood"), "happy");
+  const spokenCorrect = await page.evaluate(() => window.__spoken.at(-1));
+  assert.equal(spokenCorrect.text, `La palabra «${answer}» es correcta.`);
+  assert.equal(spokenCorrect.lang, "es-ES");
   await page.locator("#solve-btn").click();
   assert.equal(await page.locator("#solution-list li").count(), 5);
   assert.equal(await page.locator("#guess-list li").count(), 1);
@@ -60,6 +89,18 @@ const {chromium} = require("playwright");
   await page.locator("#submit-btn").click();
   assert.equal(await page.locator("#robot-message").textContent(), "¡Incorrecto!");
   assert.equal(await page.locator("#robot-figure").getAttribute("data-mood"), "sad");
+  const spokenBadLetters = await page.evaluate(() => window.__spoken.at(-1));
+  assert.ok(spokenBadLetters.text.includes("zzzz"));
+  assert.ok(spokenBadLetters.text.includes("es incorrecta"));
+  assert.equal(spokenBadLetters.lang, "es-ES");
+  // This tile permutation passes the letter check but is not in our mocked dictionary.
+  const wrongGuess = tiles.join("").toLocaleLowerCase("es");
+  if (wrongGuess !== answer.toLocaleLowerCase("es")) {
+    await page.locator("#word-input").fill(wrongGuess);
+    await page.locator("#submit-btn").click();
+    await page.waitForFunction(() => document.querySelector("#robot-message")?.textContent === "¡Incorrecto!");
+    assert.equal((await page.evaluate(() => window.__spoken.at(-1))).text, `La palabra «${wrongGuess}» es incorrecta.`);
+  }
   assert.equal(await page.locator("#word-input").inputValue(), "");
   await page.locator("#start-btn").click();
   assert.equal(await page.locator("#start-label").textContent(), "Pausar");
