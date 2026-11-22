@@ -2,6 +2,7 @@
 
 const { foldSpanish, canMakeWord, lookupSpanishWord } = globalThis.PalabrasDictionary;
 const { AUTO_WORDS, chooseAutoWord, shuffleLetters, findSolutions } = globalThis.PalabrasVocabulary;
+const { translateWord, dictionaryUrl } = globalThis.PalabrasTranslation;
 const AUTO_HISTORY_KEY = "palabras-auto-history-v1";
 const AUTO_HISTORY_LIMIT = 100;
 function readAutoHistory() {
@@ -49,6 +50,54 @@ const robotFigure = byId("robot-figure");
 const robotBubble = byId("robot-bubble");
 const robotMessage = byId("robot-message");
 const voiceToggle = byId("voice-toggle");
+const translationDialog = byId("translation-dialog");
+const translationWord = byId("translation-word");
+const translationResult = byId("translation-result");
+const translationSource = byId("translation-source-link");
+let translationController = null;
+let translationRequestId = 0;
+let translationPreviousFocus = null;
+
+async function openWordTranslation(word) {
+  translationRequestId += 1;
+  const requestId = translationRequestId;
+  if (translationController) translationController.abort();
+  translationController = new AbortController();
+  translationPreviousFocus = document.activeElement;
+  translationWord.textContent = word.toLocaleUpperCase("es");
+  translationSource.href = dictionaryUrl(word);
+  translationResult.textContent = "Buscando traducción…";
+  translationResult.dataset.state = "loading";
+  if (!translationDialog.open) translationDialog.showModal();
+  try {
+    const meaning = await translateWord(word, fetch, translationController.signal);
+    if (requestId !== translationRequestId || !translationDialog.open) return;
+    translationResult.textContent = meaning;
+    translationResult.dataset.state = "ready";
+  } catch (error) {
+    if (requestId !== translationRequestId || !translationDialog.open) return;
+    translationResult.textContent = "Traducción no disponible. Consulta SpanishDict.";
+    translationResult.dataset.state = "error";
+  }
+}
+
+function handleTranslationClick(event) {
+  const trigger = event.target.closest("button[data-translate]");
+  if (trigger && event.currentTarget.contains(trigger)) openWordTranslation(trigger.dataset.translate);
+}
+guessList.addEventListener("click", handleTranslationClick);
+solutionList.addEventListener("click", handleTranslationClick);
+byId("close-translation").addEventListener("click", () => translationDialog.close());
+translationDialog.addEventListener("click", event => {
+  if (event.target === translationDialog) translationDialog.close();
+});
+translationDialog.addEventListener("close", () => {
+  translationRequestId += 1;
+  if (translationController) translationController.abort();
+  translationController = null;
+  if (translationPreviousFocus?.isConnected) translationPreviousFocus.focus();
+  translationPreviousFocus = null;
+});
 const settingsPanel = byId("settings-panel");
 const durationInput = byId("duration-input");
 const durationOutput = byId("duration-output");
@@ -125,12 +174,19 @@ function toggleSolutions() {
   solutionList.replaceChildren();
   for (const {word, score} of solutions) {
     const item = document.createElement("li");
+    const action = document.createElement("button");
+    action.type = "button";
+    action.className = "solution-lookup";
+    action.dataset.translate = word;
+    action.setAttribute("aria-label", `Traducir ${word} al inglés`);
+    action.title = `Traducir ${word}`;
     const label = document.createElement("span");
     label.textContent = word.toLocaleUpperCase("es");
     const length = document.createElement("b");
     length.textContent = String(score);
     length.setAttribute("aria-label", `${score} letras`);
-    item.append(label, length);
+    action.append(label, length);
+    item.append(action);
     solutionList.append(item);
   }
   solutionsShown = true;
@@ -290,12 +346,19 @@ function toggleTimer() {
 function addAcceptedWord(word, original) {
   const item = document.createElement("li");
   item.className = "guess-item";
+  const action = document.createElement("button");
+  action.type = "button";
+  action.className = "guess-lookup";
+  action.dataset.translate = word;
+  action.title = `Traducir ${word}`;
+  action.setAttribute("aria-label", `Traducir ${word} al inglés`);
   const name = document.createElement("strong");
   name.textContent = word.toLocaleUpperCase("es");
   const score = document.createElement("span");
   score.className = "guess-score";
   score.textContent = `+${Array.from(word).length}`;
-  item.append(name, score);
+  action.append(name, score);
+  item.append(action);
   if (word.toLocaleLowerCase("es") !== original.toLocaleLowerCase("es")) {
     const corrected = document.createElement("small");
     corrected.textContent = `Corrección: ${original.toLocaleUpperCase("es")} → ${word.toLocaleUpperCase("es")}`;
