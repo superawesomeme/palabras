@@ -1,7 +1,19 @@
 "use strict";
 
 const { foldSpanish, canMakeWord, lookupSpanishWord } = globalThis.PalabrasDictionary;
-const { chooseAutoWord, shuffleLetters, findSolutions } = globalThis.PalabrasVocabulary;
+const { AUTO_WORDS, chooseAutoWord, shuffleLetters, findSolutions } = globalThis.PalabrasVocabulary;
+const AUTO_HISTORY_KEY = "palabras-auto-history-v1";
+const AUTO_HISTORY_LIMIT = 100;
+function readAutoHistory() {
+  try {
+    const stored = JSON.parse(window.localStorage.getItem(AUTO_HISTORY_KEY) || "[]");
+    return Array.isArray(stored) ? stored.filter(word => typeof word === "string" && AUTO_WORDS.includes(word)).slice(-AUTO_HISTORY_LIMIT) : [];
+  } catch (_) { return []; }
+}
+function rememberAutoWord(word) {
+  recentAutoWords = [...recentAutoWords.filter(item => item !== word), word].slice(-AUTO_HISTORY_LIMIT);
+  try { window.localStorage.setItem(AUTO_HISTORY_KEY, JSON.stringify(recentAutoWords)); } catch (_) { /* Private mode can block storage. */ }
+}
 const consonants = "BCDFGHJKLMNPQRSTVWXYZ";
 const consonantFrequencies = [2, 1, 4, 3, 1, 1, 1, 1, 4, 1, 5, 2, 1, 6, 6, 3, 3, 1, 1, 1, 1];
 const vowels = "AEIOU";
@@ -45,7 +57,7 @@ const durationOutput = byId("duration-output");
 let selectedLetters = [];
 let acceptedWords = new Set();
 let autoPicking = false;
-let lastAutoWord = "";
+let recentAutoWords = readAutoHistory();
 let solutionsShown = false;
 let clockDuration = 30;
 let remainingMs = clockDuration * 1000;
@@ -138,8 +150,8 @@ async function chooseAutomaticLetters() {
   resetRound(); // Auto always generates a fresh nine-letter puzzle.
   autoPicking = true;
   const activeRound = roundId;
-  const word = chooseAutoWord(Math.random, lastAutoWord);
-  lastAutoWord = word;
+  const word = chooseAutoWord(Math.random, recentAutoWords);
+  rememberAutoWord(word);
   const letters = shuffleLetters(word);
   renderBoard();
   setFeedback("Pensando…", "checking");
