@@ -373,7 +373,6 @@ h1, h2, p { margin: 0; }
 }
 .robot-bubble[data-visible="false"] { opacity: 0; transform: translateY(8px) scale(.93); pointer-events: none; }
 .robot-bubble strong { font-size: 1.07em; font-weight: 1000; line-height: 1.12; }
-.robot-bubble span { font-size: .65em; line-height: 1.15; font-weight: 800; }
 .robot-bubble[data-tone="happy"] { background: linear-gradient(160deg,#ecffc7,#a7f34b); color: #31531e; box-shadow: 0 5px 0 #5dab42,0 11px 23px rgba(0,0,0,.21); }
 .robot-bubble[data-tone="sad"] { background: linear-gradient(160deg,#ffe2ea,#ff91ac); color: #70243f; box-shadow: 0 5px 0 #c64d78,0 11px 23px rgba(0,0,0,.21); }
 .robot-figure { width: min(18vw,22vh); max-width: 300px; flex: none; aspect-ratio: 280/240; filter: drop-shadow(0 0 28px rgba(0,234,255,.22)); }
@@ -485,3 +484,34 @@ h1, h2, p { margin: 0; }
   .letter-controls .solution-list { gap: 8px; }
   .letter-controls .solution-list li { font-size: .9rem; min-height: 39px; padding: .36em .5em; }
 }
+
+/* Identical tactile 3D geometry for all three letter-selection buttons. */
+.choice-button {
+  --choice-edge: #207ea6;
+  position: relative;
+  border: 3px solid rgba(255,255,255,.88);
+  box-shadow: 0 8px 0 var(--choice-edge), 0 17px 25px rgba(0,15,48,.28),
+    inset 0 3px 0 rgba(255,255,255,.58), inset 0 -3px 0 rgba(0,37,65,.08);
+  transition: transform .13s ease, filter .13s ease, box-shadow .13s ease;
+}
+.choice-consonant { --choice-edge: #0d89b4; background: linear-gradient(155deg,#abfdff 0%,#65eeff 32%,#26caec 100%); }
+.choice-vowel { --choice-edge: #d18b16; background: linear-gradient(155deg,#fff7bd 0%,#ffe77a 34%,#ffce4b 100%); }
+.choice-auto {
+  --choice-edge: #7b9fb4; border-color: rgba(255,255,255,.95);
+  background: linear-gradient(155deg,#fff 0%,#eaf5fe 38%,#accddd 100%);
+  box-shadow: 0 8px 0 var(--choice-edge), 0 17px 25px rgba(0,15,48,.28),
+    inset 0 3px 0 rgba(255,255,255,.58), inset 0 -3px 0 rgba(0,37,65,.08);
+}
+.choice-button:not(:disabled):hover { transform:translateY(-3px); filter:brightness(1.07); }
+.choice-button:not(:disabled):active,.choice-button.simulated-press {
+  transform:translateY(6px) scale(.98) !important;
+  filter: brightness(1.06);
+  box-shadow: 0 2px 0 var(--choice-edge),0 6px 13px rgba(0,15,48,.21),
+    inset 0 3px 7px rgba(0,53,88,.12) !important;
+}
+.game-layout[data-autopick="true"] .choice-auto {
+  box-shadow: 0 8px 0 var(--choice-edge),0 17px 25px rgba(0,15,48,.28),
+    0 0 24px rgba(206,251,255,.42),inset 0 3px 0 rgba(255,255,255,.58);
+}
+.robot-bubble { min-height:clamp(45px,5.5vh,70px); font-size:clamp(1.08rem,1.55vw,1.95rem); }
+.robot-bubble strong { line-height:1.16; }

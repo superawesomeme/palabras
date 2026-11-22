@@ -48,7 +48,6 @@ const solutionList = byId("solution-list");
 const robotFigure = byId("robot-figure");
 const robotBubble = byId("robot-bubble");
 const robotMessage = byId("robot-message");
-const robotDetail = byId("robot-detail");
 const voiceToggle = byId("voice-toggle");
 const settingsPanel = byId("settings-panel");
 const durationInput = byId("duration-input");
@@ -93,17 +92,17 @@ function speakRobot(message) {
   }
 }
 
-function setFeedback(message, tone = "neutral", detail = "") {
+function setFeedback(message, tone = "neutral", spokenPhrase = "") {
+  // Only the short verdict appears in the bubble; full word-specific feedback is spoken.
   robotMessage.textContent = message;
-  robotDetail.textContent = detail;
   robotBubble.dataset.visible = String(Boolean(message));
   robotBubble.dataset.tone = tone === "success" ? "happy" : tone === "error" ? "sad" : "neutral";
   const mood = tone === "success" ? "happy" : tone === "error" ? "sad" : tone === "checking" ? "thinking" : "idle";
   robotFigure.dataset.mood = "idle";
   void robotFigure.offsetWidth;
   robotFigure.dataset.mood = mood;
-  robotFigure.setAttribute("aria-label", message ? `Robot: ${message} ${detail}` : "Robot del juego");
-  if (tone === "success" || tone === "error") speakRobot(message);
+  robotFigure.setAttribute("aria-label", message ? `Robot: ${message}` : "Robot del juego");
+  if (spokenPhrase && (tone === "success" || tone === "error")) speakRobot(spokenPhrase);
 }
 
 function closeSolutions() {
@@ -136,9 +135,9 @@ function toggleSolutions() {
   solutionPanel.hidden = false;
   solveBtn.setAttribute("aria-expanded", "true");
   if (!solutions.length) {
-    setFeedback("No encuentro palabras", "neutral", "Prueba con otra combinación");
+    setFeedback("No encuentro palabras", "neutral");
   } else {
-    setFeedback("¡A resolver!", "success", `${solutions.length} palabras B1/B2`);
+    setFeedback("¡A resolver!", "success");
     // Speech bubbles are the primary announcement; voice is optional.
     speakRobot(solutions.map(item => item.word).join(", "));
   }
@@ -263,7 +262,7 @@ function tick(now) {
     timerState = "finished";
     timerFrame = null;
     updateTimerControls();
-    setFeedback("¡Tiempo!", "neutral", "Puedes seguir comprobando palabras");
+    setFeedback("¡Tiempo!", "neutral");
     return;
   }
   timerFrame = requestAnimationFrame(tick);
@@ -339,18 +338,18 @@ wordForm.addEventListener("submit", async (event) => {
   const original = wordInput.value.trim().normalize("NFC").toLocaleLowerCase("es");
   if (!original) return;
   if (!/^[a-záéíóúüñ]+$/iu.test(original)) {
-    setFeedback("¡Incorrecto!", "error", "Escribe una sola palabra");
+    setFeedback("¡Incorrecto!", "error", "La respuesta no es una sola palabra válida.");
     clearSubmittedWord(original);
     return;
   }
   if (!canMakeWord(original, selectedLetters)) {
-    setFeedback("¡Incorrecto!", "error", "Letras no disponibles");
+    setFeedback("¡Incorrecto!", "error", `La respuesta «${original}» es incorrecta: faltan letras.`);
     clearSubmittedWord(original);
     return;
   }
   const key = foldSpanish(original);
   if (acceptedWords.has(key)) {
-    setFeedback("¡Repetida!", "neutral", "Ya está en la lista");
+    setFeedback("¡Repetida!", "neutral");
     clearSubmittedWord(original);
     return;
   }
@@ -363,11 +362,11 @@ wordForm.addEventListener("submit", async (event) => {
   validationPending = false;
   submitBtn.disabled = false;
   if (result.status === "unavailable") {
-    setFeedback("Sin conexión", "neutral", "Inténtalo otra vez");
+    setFeedback("Sin conexión", "neutral");
     return;
   }
   if (result.status !== "valid") {
-    setFeedback("¡Incorrecto!", "error", "No aparece en el diccionario");
+    setFeedback("¡Incorrecto!", "error", `La palabra «${original}» es incorrecta.`);
     clearSubmittedWord(original);
     return;
   }
@@ -375,7 +374,7 @@ wordForm.addEventListener("submit", async (event) => {
   acceptedWords.add(key);
   addAcceptedWord(correct, original);
   closeSolutions();
-  setFeedback("¡Correcto!", "success", correct === original ? "" : correct.toLocaleUpperCase("es"));
+  setFeedback("¡Correcto!", "success", `La palabra «${correct}» es correcta.`);
   clearSubmittedWord(original);
 });
 
@@ -396,7 +395,7 @@ fullscreenBtn.addEventListener("click", async () => {
     if (document.fullscreenElement) await document.exitFullscreen();
     else await document.documentElement.requestFullscreen();
   } catch (_) {
-    setFeedback("Pantalla completa", "neutral", "No disponible en este navegador");
+    setFeedback("Pantalla completa", "neutral");
   }
 });
 document.addEventListener("fullscreenchange", () => {
