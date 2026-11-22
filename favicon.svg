@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Palabras Ocultas">
+  <defs>
+    <linearGradient id="gold-edge" x1="0" x2=".8" y1="0" y2="1">
+      <stop stop-color="#f8a21d"/><stop offset=".65" stop-color="#df8111"/><stop offset="1" stop-color="#b45d0a"/>
+    </linearGradient>
+    <linearGradient id="gold-face" x1=".2" x2=".8" y1="0" y2="1">
+      <stop stop-color="#fff5a3"/><stop offset=".37" stop-color="#ffe47c"/><stop offset="1" stop-color="#ffc651"/>
+    </linearGradient>
+    <linearGradient id="spark" x1="0" x2=".8" y1="0" y2="1">
+      <stop stop-color="#ffffff"/><stop offset="1" stop-color="#fffdf4"/>
+    </linearGradient>
+  </defs>
+  <!-- The artboard is transparent: no blue square behind the icon. -->
+  <path d="M21 36C18 17 33 11 52 8L88 4C108 2 119 15 121 35L127 94C129 111 116 120 99 122L50 127C31 130 21 119 18 102L13 56C12 47 15 41 21 36Z" fill="url(#gold-edge)"/>
+  <path d="M19 29C19 15 32 9 52 7L88 3C107 2 116 13 119 31L123 80C127 100 114 110 96 113L49 119C30 121 21 111 19 94L12 53C10 42 13 35 19 29Z" fill="url(#gold-face)"/>
+  <path d="M63 32 71 58 94 66 71 74 63 100 56 74 33 66 56 58Z" fill="url(#spark)"/>
+</svg>
