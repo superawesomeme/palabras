@@ -77,8 +77,21 @@ const {chromium} = require("playwright");
   for (const removed of ["translation-kicker", "translation-note", "translation-source-link", "translation-provider"]) {
     assert.equal(await page.locator("." + removed + ",#" + removed).count(), 0);
   }
-  const fontFamily = await page.locator("body").evaluate(el => getComputedStyle(el).fontFamily);
-  assert.match(fontFamily, /Helvetica Neue.*Helvetica.*Arial/);
+  const fontCheck = await page.evaluate(async () => {
+    await document.fonts.ready;
+    const faces = [...document.fonts].filter(face => face.family === "Source Sans 3");
+    return {
+      computed: getComputedStyle(document.body).fontFamily,
+      faces: faces.map(face => ({status: face.status, weight: face.weight})),
+      regular: document.fonts.check('400 22px "Source Sans 3"'),
+      bold: document.fonts.check('800 22px "Source Sans 3"')
+    };
+  });
+  assert.match(fontCheck.computed, /^"Source Sans 3", sans-serif$/);
+  assert.ok(fontCheck.faces.some(face => face.status === "loaded"), "Self-hosted font must actually load");
+  assert.equal(fontCheck.regular, true);
+  assert.equal(fontCheck.bold, true);
+  assert.equal(await page.locator('link[rel="preload"][as="font"]').count(), 1);
   assert.equal(await page.locator("#translation-dialog").isVisible(), true);
   const translationBounds = await page.locator("#translation-dialog").evaluate(el => {
     const rect = el.getBoundingClientRect();
