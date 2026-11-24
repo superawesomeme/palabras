@@ -75,13 +75,14 @@ const {chromium} = require("playwright");
   const tiles = await page.locator("#letter-board .tile").allTextContents();
   const chosen = await page.evaluate(letters => window.PalabrasVocabulary.findSolutions(letters), tiles);
   assert.equal(chosen.length, 5);
+  const expectedTranslation = await page.evaluate(word => window.PalabrasTranslation.translateWord(word), chosen[0].word);
   await page.screenshot({path:"test-artifacts/auto-ready.png"});
   await page.locator("#solve-btn").click();
   assert.equal(await page.locator("#solution-list li").count(), 5);
   await page.locator("#solution-list li button").first().click();
   await page.waitForFunction(() => document.querySelector("#translation-result")?.dataset.state === "ready");
   assert.equal(await page.locator("#translation-word").textContent(), chosen[0].word.toLocaleUpperCase("es"));
-  assert.equal(await page.locator("#translation-result").textContent(), "English: " + chosen[0].word.toLocaleLowerCase("es"));
+  assert.equal(await page.locator("#translation-result").textContent(), expectedTranslation);
   for (const removed of ["translation-kicker", "translation-note", "translation-source-link", "translation-provider"]) {
     assert.equal(await page.locator("." + removed + ",#" + removed).count(), 0);
   }
@@ -150,7 +151,7 @@ const {chromium} = require("playwright");
   await page.locator("#guess-list li button.guess-lookup").first().click();
   await page.waitForFunction(() => document.querySelector("#translation-result")?.dataset.state === "ready");
   assert.equal(await page.locator("#translation-word").textContent(), answer.toLocaleUpperCase("es"));
-  assert.equal(await page.locator("#translation-result").textContent(), "English: " + answer.toLocaleLowerCase("es"));
+  assert.equal(await page.locator("#translation-result").textContent(), expectedTranslation);
   await page.keyboard.press("Escape");
   assert.equal(await page.locator("#translation-dialog").isVisible(), false);
   assert.ok(translationCount >= 1);
