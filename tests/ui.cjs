@@ -29,6 +29,14 @@ const {chromium} = require("playwright");
   await page.route("https://api.mymemory.translated.net/get?**", async route => {
     translationCount++;
     const term = new URL(route.request().url()).searchParams.get("q");
+    if (term === "navegando") {
+      await route.fulfill({
+        status: 200, contentType: "application/json",
+        headers: {"Access-Control-Allow-Origin": "*"},
+        body: JSON.stringify({responseStatus: 200, responseData: {translatedText: "sailing", match: 0.32}, matches: []})
+      });
+      return;
+    }
     await route.fulfill({
       status: 200,
       contentType: "application/json",
@@ -102,6 +110,21 @@ const {chromium} = require("playwright");
   await page.screenshot({path:"test-artifacts/translation-modal-1920.png"});
   await page.locator("#close-translation").click();
   assert.equal(await page.locator("#translation-dialog").isVisible(), false);
+  // Regression: a low-confidence MyMemory answer must still be shown as
+  // approximate, not replaced with "Traducción no verificada".
+  await page.evaluate(() => openWordTranslation("navegando"));
+  await page.waitForFunction(() =>
+    document.querySelector("#translation-result")?.dataset.state === "ready");
+  assert.equal(await page.locator("#translation-result").textContent(), "sailing");
+  assert.equal(await page.locator("#translation-note").isVisible(), true);
+  assert.equal(await page.locator("#translation-verify-link").isVisible(), true);
+  await page.locator("#close-translation").click();
+  // Reviewed words work even if the external provider returns nonsense.
+  await page.evaluate(() => openWordTranslation("ruedas"));
+  await page.waitForFunction(() => document.querySelector("#translation-result")?.dataset.state === "ready");
+  assert.equal(await page.locator("#translation-result").textContent(), "wheels");
+  assert.equal(await page.locator("#translation-note").isVisible(), false);
+  await page.locator("#close-translation").click();
   assert.equal(await page.locator("#solution-list li").count(), 5);
   // Robot solutions belong to the former letter-choice row, never to pupil guesses.
   assert.equal(await page.locator("#solution-panel").evaluate(el => el.parentElement.classList.contains("letter-controls")), true);
