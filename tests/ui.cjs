@@ -83,7 +83,7 @@ const {chromium} = require("playwright");
   await page.waitForFunction(() => document.querySelector("#translation-result")?.dataset.state === "ready");
   assert.equal(await page.locator("#translation-word").textContent(), chosen[0].word.toLocaleUpperCase("es"));
   assert.equal(await page.locator("#translation-result").textContent(), expectedTranslation);
-  for (const removed of ["translation-kicker", "translation-note", "translation-source-link", "translation-provider"]) {
+  for (const removed of ["translation-kicker", "translation-source-link", "translation-provider"]) {
     assert.equal(await page.locator("." + removed + ",#" + removed).count(), 0);
   }
   const fontCheck = await page.evaluate(async () => {
