@@ -29,6 +29,14 @@ const {chromium} = require("playwright");
   await page.route("https://api.mymemory.translated.net/get?**", async route => {
     translationCount++;
     const term = new URL(route.request().url()).searchParams.get("q");
+    if (term === "navegando") {
+      await route.fulfill({
+        status: 200, contentType: "application/json",
+        headers: {"Access-Control-Allow-Origin": "*"},
+        body: JSON.stringify({responseStatus: 200, responseData: {translatedText: "sailing", match: 0.32}, matches: []})
+      });
+      return;
+    }
     await route.fulfill({
       status: 200,
       contentType: "application/json",
@@ -67,14 +75,15 @@ const {chromium} = require("playwright");
   const tiles = await page.locator("#letter-board .tile").allTextContents();
   const chosen = await page.evaluate(letters => window.PalabrasVocabulary.findSolutions(letters), tiles);
   assert.equal(chosen.length, 5);
+  const expectedTranslation = await page.evaluate(word => window.PalabrasTranslation.translateWord(word), chosen[0].word);
   await page.screenshot({path:"test-artifacts/auto-ready.png"});
   await page.locator("#solve-btn").click();
   assert.equal(await page.locator("#solution-list li").count(), 5);
   await page.locator("#solution-list li button").first().click();
   await page.waitForFunction(() => document.querySelector("#translation-result")?.dataset.state === "ready");
   assert.equal(await page.locator("#translation-word").textContent(), chosen[0].word.toLocaleUpperCase("es"));
-  assert.equal(await page.locator("#translation-result").textContent(), "English: " + chosen[0].word.toLocaleLowerCase("es"));
-  for (const removed of ["translation-kicker", "translation-note", "translation-source-link", "translation-provider"]) {
+  assert.equal(await page.locator("#translation-result").textContent(), expectedTranslation);
+  for (const removed of ["translation-kicker", "translation-source-link", "translation-provider"]) {
     assert.equal(await page.locator("." + removed + ",#" + removed).count(), 0);
   }
   const fontCheck = await page.evaluate(async () => {
@@ -102,6 +111,21 @@ const {chromium} = require("playwright");
   await page.screenshot({path:"test-artifacts/translation-modal-1920.png"});
   await page.locator("#close-translation").click();
   assert.equal(await page.locator("#translation-dialog").isVisible(), false);
+  // Regression: a low-confidence MyMemory answer must still be shown as
+  // approximate, not replaced with "Traducción no verificada".
+  await page.evaluate(() => openWordTranslation("navegando"));
+  await page.waitForFunction(() =>
+    document.querySelector("#translation-result")?.dataset.state === "ready");
+  assert.equal(await page.locator("#translation-result").textContent(), "sailing");
+  assert.equal(await page.locator("#translation-note").isVisible(), true);
+  assert.equal(await page.locator("#translation-verify-link").isVisible(), true);
+  await page.locator("#close-translation").click();
+  // Reviewed words work even if the external provider returns nonsense.
+  await page.evaluate(() => openWordTranslation("ruedas"));
+  await page.waitForFunction(() => document.querySelector("#translation-result")?.dataset.state === "ready");
+  assert.equal(await page.locator("#translation-result").textContent(), "wheels");
+  assert.equal(await page.locator("#translation-note").isVisible(), false);
+  await page.locator("#close-translation").click();
   assert.equal(await page.locator("#solution-list li").count(), 5);
   // Robot solutions belong to the former letter-choice row, never to pupil guesses.
   assert.equal(await page.locator("#solution-panel").evaluate(el => el.parentElement.classList.contains("letter-controls")), true);
@@ -127,7 +151,7 @@ const {chromium} = require("playwright");
   await page.locator("#guess-list li button.guess-lookup").first().click();
   await page.waitForFunction(() => document.querySelector("#translation-result")?.dataset.state === "ready");
   assert.equal(await page.locator("#translation-word").textContent(), answer.toLocaleUpperCase("es"));
-  assert.equal(await page.locator("#translation-result").textContent(), "English: " + answer.toLocaleLowerCase("es"));
+  assert.equal(await page.locator("#translation-result").textContent(), expectedTranslation);
   await page.keyboard.press("Escape");
   assert.equal(await page.locator("#translation-dialog").isVisible(), false);
   assert.ok(translationCount >= 1);
@@ -190,4 +214,4 @@ const {chromium} = require("playwright");
   assert.deepEqual(errors, []);
   console.log("Classroom UI, Auto, Resolver, mascot, reset and responsive browser checks passed.");
   await browser.close();
-})().catch(error => {console.error(error);process.exitCode=1;});
+})().catch(error => {console.error(error);process.exit(1);});

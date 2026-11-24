@@ -7,7 +7,7 @@
   <title>Palabras Ocultas · Juego de letras</title>
   <link rel="icon" type="image/svg+xml" href="./favicon.svg?v=1">
   <link rel="preload" href="./assets/fonts/SourceSans3-variable.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="./styles.css?v=15">
+  <link rel="stylesheet" href="./styles.css?v=16">
 </head>
 <body>
   <main id="game-layout" class="game-layout" data-phase="choosing">
@@ -150,11 +150,12 @@
     <h2 id="translation-word" lang="es"></h2>
     <div class="translation-divider" aria-hidden="true"></div>
     <p id="translation-result" class="translation-result" role="status" aria-live="polite"></p>
+    <p id="translation-note" class="translation-note" hidden>Traducción automática · puede variar según el contexto.</p>
     <a id="translation-verify-link" class="translation-verify-link" href="#" target="_blank" rel="noopener noreferrer" hidden>Consultar diccionario ↗</a>
   </dialog>
   <script src="./dictionary.js?v=6"></script>
   <script src="./vocabulary.js?v=1"></script>
-  <script src="./translation.js?v=2"></script>
-  <script src="./game.js?v=14"></script>
+  <script src="./translation.js?v=3"></script>
+  <script src="./game.js?v=15"></script>
 </body>
 </html>

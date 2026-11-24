@@ -571,3 +571,11 @@ h1, h2, p { margin: 0; }
   text-underline-offset: .2em;
 }
 .translation-verify-link:focus-visible { outline: 3px solid #ffe567; outline-offset: 4px; }
+
+/* Only show the distinction for online machine translations in the modal. */
+.translation-note:not([hidden]) {
+  margin-top: .5rem;
+  color: #c5daec;
+  font-size: clamp(.85rem, 1vw, 1rem);
+  line-height: 1.35;
+}
