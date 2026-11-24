@@ -65,7 +65,7 @@ test("Unavailable, invalid and quota responses are not accepted as translations"
   assert.equal(selectTranslation("gato",{responseStatus:200,responseData:{translatedText:"MYMEMORY WARNING: quota exceeded"}}),null);
   assert.equal(selectTranslation("gato",{responseStatus:200,responseData:{translatedText:"<script>alert(1)</script>"}}),null);
   await assert.rejects(()=>translateWord("<script>", async()=>mockResponse({})), /Invalid word/);
-  await assert.rejects(()=>translateWord("perro", async()=>mockResponse({},false)), /unavailable/);
+  await assert.rejects(()=>translateWord("perrera", async()=>mockResponse({},false)), /unavailable/);
   await assert.rejects(()=>translateWord("cargando", async()=>mockResponse({responseStatus:500,responseData:{translatedText:"loading"}})), /not available/);
 });
 
