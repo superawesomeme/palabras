@@ -560,3 +560,14 @@ h1, h2, p { margin: 0; }
 @media (prefers-reduced-motion: reduce) {
   .guess-lookup, .solution-lookup { transition: none; }
 }
+
+/* Only shown when an online translation cannot be verified. */
+.translation-verify-link:not([hidden]) {
+  display: inline-block;
+  margin-top: 1rem;
+  color: #b7f5ff;
+  font-size: clamp(.95rem, 1.2vw, 1.2rem);
+  font-weight: 650;
+  text-underline-offset: .2em;
+}
+.translation-verify-link:focus-visible { outline: 3px solid #ffe567; outline-offset: 4px; }
