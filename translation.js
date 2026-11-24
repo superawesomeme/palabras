@@ -87,7 +87,7 @@
     // A standalone primary result is usable only if the provider marks it as
     // an exact match AND there are no conflicting/off-target memory segments.
     if (Array.isArray(data.matches) && data.matches.length) return null;
-    if (Number(data?.responseData?.match) < 0.995) return null;
+    if (!(Number(data?.responseData?.match) >= 0.995)) return null;
     return cleanEnglish(data?.responseData?.translatedText);
   }
 
