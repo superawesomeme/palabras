@@ -2,7 +2,7 @@
 
 const { foldSpanish, canMakeWord, lookupSpanishWord } = globalThis.PalabrasDictionary;
 const { AUTO_WORDS, chooseAutoWord, shuffleLetters, findSolutions } = globalThis.PalabrasVocabulary;
-const { translateWord } = globalThis.PalabrasTranslation;
+const { translateWord, dictionaryUrl } = globalThis.PalabrasTranslation;
 const AUTO_HISTORY_KEY = "palabras-auto-history-v1";
 const AUTO_HISTORY_LIMIT = 100;
 function readAutoHistory() {
@@ -53,6 +53,7 @@ const voiceToggle = byId("voice-toggle");
 const translationDialog = byId("translation-dialog");
 const translationWord = byId("translation-word");
 const translationResult = byId("translation-result");
+const translationVerifyLink = byId("translation-verify-link");
 let translationController = null;
 let translationRequestId = 0;
 let translationPreviousFocus = null;
@@ -66,6 +67,8 @@ async function openWordTranslation(word) {
   translationWord.textContent = word.toLocaleUpperCase("es");
   translationResult.textContent = "Buscando traducción…";
   translationResult.dataset.state = "loading";
+  translationVerifyLink.hidden = true;
+  translationVerifyLink.href = dictionaryUrl(word);
   if (!translationDialog.open) translationDialog.showModal();
   try {
     const meaning = await translateWord(word, fetch, translationController.signal);
@@ -74,8 +77,9 @@ async function openWordTranslation(word) {
     translationResult.dataset.state = "ready";
   } catch (error) {
     if (requestId !== translationRequestId || !translationDialog.open) return;
-    translationResult.textContent = "Traducción no disponible.";
+    translationResult.textContent = "Traducción no verificada.";
     translationResult.dataset.state = "error";
+    translationVerifyLink.hidden = false;
   }
 }
 

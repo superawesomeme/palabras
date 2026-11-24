@@ -33,7 +33,7 @@ const {chromium} = require("playwright");
       status: 200,
       contentType: "application/json",
       headers: {"Access-Control-Allow-Origin": "*"},
-      body: JSON.stringify({responseStatus: 200, responseData: {translatedText: "English: " + term}})
+      body: JSON.stringify({responseStatus: 200, responseData: {translatedText: "English: " + term, match: 1}, matches: [{segment: term, translation: "English: " + term, match: 1, quality: 80}]})
     });
   });
   await page.route("https://api.datamuse.com/**", async route => {
